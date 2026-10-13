@@ -26,7 +26,7 @@
     * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
     body { background-color: var(--bg-color); font-family: var(--font-body); color: var(--text-dark); width: 100vw; height: 100vh; overflow: hidden; position: relative; }
 
-    /* Écran de connexion privé */
+    /* Écran de verrouillage */
     #lock-screen {
       position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
       background: var(--bg-color); z-index: 1000; display: flex;
@@ -65,6 +65,7 @@
 
     .sync-indicator { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-muted); background: rgba(0,0,0,0.04); padding: 4px 10px; border-radius: 12px; }
     .status-dot { width: 7px; height: 7px; border-radius: 50%; background: #34C759; }
+    .status-dot.syncing { background: #FF9500; }
 
     .toolbar-actions { display: flex; align-items: center; gap: 6px; }
     .btn { background: rgba(240, 238, 233, 0.8); border: 1px solid transparent; color: var(--text-dark); padding: 7px 12px; border-radius: 18px; font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; gap: 5px; }
@@ -161,8 +162,8 @@
     </div>
 
     <div class="sync-indicator">
-      <div class="status-dot"></div>
-      <span>Sauvegarde Auto Local</span>
+      <div class="status-dot" id="sync-dot"></div>
+      <span id="sync-text">Synchro Cloud...</span>
     </div>
 
     <div class="toolbar-actions">
@@ -192,7 +193,7 @@
       <button class="modal-close" onclick="closeModal()">✕</button>
       
       <div class="modal-header">
-        <img src="" id="m-avatar" class="modal-avatar" alt="Logo" title="Cliquer pour agrandir en grand" onclick="openLightbox()">
+        <img src="" id="m-avatar" class="modal-avatar" alt="Logo" title="Cliquer pour agrandir" onclick="openLightbox()">
         <div>
           <h2 id="m-company-title" style="font-family: var(--font-title); color: var(--primary-wine);">Entreprise</h2>
           <p id="m-contact-title" style="color: var(--text-muted); font-size: 13px;">Contact</p>
@@ -217,7 +218,6 @@
     </div>
   </div>
 
-  <!-- Visionneuse Photo Plein Écran -->
   <div class="lightbox-overlay" id="lightbox" onclick="closeLightbox()">
     <img src="" id="lightbox-img" class="lightbox-img" alt="Photo agrandie">
   </div>
@@ -225,6 +225,10 @@
   <input type="file" id="file-input" onchange="handleFileSelect(event)">
 
   <script>
+    // --- CONFIGURATION JSONBIN.IO ---
+    const JSONBIN_BIN_ID = "6ace1c3eac6210605a2d7072"; 
+    const JSONBIN_MASTER_KEY = "$2a$10$5PPv7.efMR/bixp3G0XV4uTh1oi80l3doJq08GDMSeAP/2d/nwT4i"; 
+
     const SECRET_PASSWORD = "Bouquet2026";
 
     function unlockApp() {
@@ -241,58 +245,12 @@
       document.getElementById('lock-screen').style.display = 'none';
     }
 
-    const STORAGE_KEY = 'bouquet_wine_malaisie_2026_data_v2';
-
-    const DEFAULT_DOMAINS = [
-      { id: 'd1', name: 'JL Vergnon', region: 'Champagne', x: 776, y: 566.5 },
-      { id: 'd2', name: 'Jérôme Blin', region: 'Champagne', x: 916, y: 566.5 },
-      { id: 'd3', name: 'Maurice Choppin', region: 'Champagne', x: 1056, y: 566.5 },
-      { id: 'd4', name: 'Château des Rontets', region: 'Bourgogne', x: 1196, y: 566.5 },
-      { id: 'd5', name: 'Jean Collet', region: 'Bourgogne', x: 776, y: 631.5 },
-      { id: 'd6', name: 'Tessier', region: 'Bourgogne', x: 916, y: 631.5 },
-      { id: 'd7', name: 'Philippe Chavy', region: 'Bourgogne', x: 1056, y: 631.5 },
-      { id: 'd8', name: 'Clos de la Chapelle', region: 'Bourgogne', x: 1196, y: 631.5 },
-      { id: 'd9', name: 'Thierry Mortet', region: 'Bourgogne', x: 776, y: 696.5 },
-      { id: 'd10', name: 'Dugat Py', region: 'Bourgogne', x: 916, y: 696.5 },
-      { id: 'd11', name: 'Stefan Meyer', region: 'Allemagne', x: 1056, y: 696.5 }
-    ];
-
-    const DEFAULT_IMPORTERS = [
-      { id: "i_1", company: "Top 30 Media", name: "Kailash", activity: "Média", email: "kailash@top30media.com", phone: "60123119940", avatar: "", notes: "", x: 0, y: 0 },
-      { id: "i_2", company: "Cathay Pacific Airways Limited", name: "Deanna Cheah", activity: "Commercial - Compagnie aérienne", email: "deanna_cheah@cathaypacific.com", phone: "60126062747", avatar: "", notes: "", x: 0, y: 0 },
-      { id: "i_3", company: "Godai SDN BHD", name: "Solomiia Begun", activity: "Wine Exporter", email: "salome.vvv77@gmail.com", phone: "767044747", avatar: "", notes: "Agent export sur Malaisie Thailand Cambodge Kazakstan etc", x: 0, y: 0 },
-      { id: "i_4", company: "Sip with Jojo", name: "Jocelyn Wong", activity: "dégustation, evenementiel, private tasting", email: "jojo@sipwithjojo.my", phone: "60133223321", avatar: "", notes: "dégustation, evenementiel, private tasting", x: 0, y: 0 },
-      { id: "i_5", company: "Di Tullio & Sons", name: "Olivier Di Tullio", activity: "Importer", email: "olivier@ditullio-and-sons.com", phone: "60126430908", avatar: "", notes: "Importateur et agent en france comme nous - travaille avec beaucoup de restaurant en Malaisie", x: 0, y: 0 },
-      { id: "i_6", company: "Milawa", name: "Jinee Chung", activity: "Importer", email: "jinee@milawa.com", phone: "60123888534", avatar: "", notes: "Top importateur", x: 0, y: 0 },
-      { id: "i_7", company: "CCI France Malaysia", name: "Pauline Goh", activity: "Chambre des commerces", email: "paulinegoh30@gmail.com", phone: "60192121554", avatar: "", notes: "recuprer la vidéo commerciale du stand", x: 0, y: 0 },
-      { id: "i_8", company: "Mario Mahmood", name: "Mario Mahmood", activity: "Avocat", email: "mariomahmood@gmail.com", phone: "60122880821", avatar: "", notes: "", x: 0, y: 0 },
-      { id: "i_9", company: "Nam Lee Cheong SDN BHD", name: "Ginky Chen", activity: "Procurement Manager", email: "ginky.chen@namleecheong.com.my", phone: "60321413177", avatar: "", notes: "", x: 0, y: 0 },
-      { id: "i_10", company: "Waldorf Astoria", name: "Mandy Chin", activity: "Director of wine", email: "mandy.chin@waldorastoria.com", phone: "60122958211", avatar: "", notes: "", x: 0, y: 0 },
-      { id: "i_11", company: "Sommelier Association of Malaysia", name: "Danny Leong", activity: "Sommelerie", email: "president@somlay.org.my", phone: "60178734148", avatar: "", notes: "Club sommelier", x: 0, y: 0 },
-      { id: "i_12", company: "Vintage group companies", name: "M Nathan", activity: "Importer", email: "nhj111@gmail.com", phone: "60123088196", avatar: "", notes: "CEO", x: 0, y: 0 },
-      { id: "i_13", company: "Fortier Wines & Spirit", name: "James Pook", activity: "Importer", email: "james.pook@fws.com.my", phone: "60125983760", avatar: "", notes: "Marketing Manager", x: 0, y: 0 },
-      { id: "i_14", company: "Hong Bee Group", name: "Nicole Chua", activity: "Importer", email: "nicolechua.hbd@hongbee.com.my", phone: "60126608787", avatar: "", notes: "Key Account Manager", x: 0, y: 0 },
-      { id: "i_15", company: "Dolce Degusté", name: "Michelle Kay", activity: "agent auprès des restaurants malaisien", email: "dolcedeguste@gmail.com", phone: "60173388610", avatar: "", notes: "ambassador", x: 0, y: 0 },
-      { id: "i_16", company: "Five Connoisseurs", name: "Evans Quah", activity: "importer", email: "evans@conoisseurs.com.my", phone: "60166966968", avatar: "", notes: "Sales Manager", x: 0, y: 0 },
-      { id: "i_17", company: "Wine Republik", name: "Andrew Leong", activity: "importer", email: "info@thewinerepublik.com", phone: "60178338858", avatar: "", notes: "Bread and Wine Gallery", x: 0, y: 0 },
-      { id: "i_18", company: "Bai Jiu Group SDN BHD", name: "Paolo Tan", activity: "Distributeur", email: "bjgroup19@gmail.com", phone: "163327833", avatar: "", notes: "", x: 0, y: 0 },
-      { id: "i_19", company: "Burg Life / Corevino", name: "Ken Liew", activity: "importer", email: "ken@corevino.com", phone: "60189168309", avatar: "", notes: "top importer", x: 0, y: 0 },
-      { id: "i_20", company: "Sunway University", name: "Dr Joaquim Dias Soero", activity: "Professor University", email: "joaquimd@sunway.edu.my", phone: "60374918622", avatar: "", notes: "Prof université", x: 0, y: 0 },
-      { id: "i_21", company: "Monopole", name: "Edwin Lye", activity: "General Manager", email: "edwin@monopole.com.my", phone: "60108181882", avatar: "", notes: "Top Importer", x: 0, y: 0 },
-      { id: "i_22", company: "W Wine Liquor Warehouse", name: "Andrew", activity: "importer", email: "andrew@winewarehouse.com.my", phone: "60123824113", avatar: "", notes: "", x: 0, y: 0 },
-      { id: "i_23", company: "The Tipsy Group", name: "Daniel Chan", activity: "Wine Bar", email: "", phone: "126809078", avatar: "", notes: "Wine Bar", x: 0, y: 0 },
-      { id: "i_24", company: "Equatorial", name: "Donald Lim", activity: "Chief executive officer", email: "donlim@hec.equatorial.com", phone: "60322757817", avatar: "", notes: "Hotel", x: 0, y: 0 },
-      { id: "i_25", company: "Youngmedia", name: "Joey Lim", activity: "Media", email: "helloyoungmedia@gmail.com", phone: "60127009102", avatar: "", notes: "Media - video a recuperer de nous", x: 0, y: 0 },
-      { id: "i_26", company: "Finlux SDN BHD", name: "Chew Lai Yin", activity: "Importer", email: "finux@pd.jaring.my", phone: "60162272826", avatar: "", notes: "Entry level range - aime blin - Meyer - Bourgogne regional entrés de gamme", x: 0, y: 0 },
-      { id: "i_27", company: "Hanareya Group", name: "Ruby Song", activity: "Importer", email: "ruby@hanareyagroup.com", phone: "60123222317", avatar: "", notes: "Head of Beverages & distribution", x: 0, y: 0 },
-      { id: "i_28", company: "Roche Bobois Paris", name: "Kerrie Yap", activity: "boutique", email: "k.yap@roche-bobois.com", phone: "60162210832", avatar: "", notes: "", x: 0, y: 0 },
-      { id: "i_29", company: "Lush Food Group", name: "Tim Whitehead", activity: "Distributor", email: "tim@lushfoodgroup.com", phone: "60123624108", avatar: "", notes: "Distributeur de vins dans les hotels et endroits de luxes", x: 0, y: 0 },
-      { id: "i_30", company: "Bacchus Wines SDN", name: "Yoyo Wong", activity: "importer", email: "yoyowong.bacchus@gmail.com", phone: "60162121534", avatar: "", notes: "", x: 0, y: 0 }
-    ];
-
+    const DEFAULT_DOMAINS = [{"id": "d1", "name": "JL Vergnon", "region": "Champagne", "x": 776, "y": 566.5}, {"id": "d2", "name": "Jérôme Blin", "region": "Champagne", "x": 916, "y": 566.5}, {"id": "d3", "name": "Maurice Choppin", "region": "Champagne", "x": 1056, "y": 566.5}, {"id": "d4", "name": "Château des Rontets", "region": "Bourgogne", "x": 1196, "y": 566.5}, {"id": "d5", "name": "Jean Collet", "region": "Bourgogne", "x": 776, "y": 631.5}, {"id": "d6", "name": "Tessier", "region": "Bourgogne", "x": 916, "y": 631.5}, {"id": "d7", "name": "Philippe Chavy", "region": "Bourgogne", "x": 1056, "y": 631.5}, {"id": "d8", "name": "Clos de la Chapelle", "region": "Bourgogne", "x": 1196, "y": 631.5}, {"id": "d9", "name": "Thierry Mortet", "region": "Bourgogne", "x": 776, "y": 696.5}, {"id": "d10", "name": "Dugat Py", "region": "Bourgogne", "x": 916, "y": 696.5}, {"id": "d11", "name": "Stefan Meyer", "region": "Allemagne", "x": 1056, "y": 696.5}];
+    
+    // Charger immédiatement vos données en mémoire locale
     let state = {
       domains: JSON.parse(JSON.stringify(DEFAULT_DOMAINS)),
-      importers: JSON.parse(JSON.stringify(DEFAULT_IMPORTERS)),
+      importers: [],
       connections: []
     };
 
@@ -301,39 +259,75 @@
     let currentEditingId = null;
 
     window.addEventListener('DOMContentLoaded', () => {
-      loadFromLocalStorage();
       calculateInitialPositions();
       render();
       window.addEventListener('resize', updateConnections);
-      
+
+      // Charger la dernière version depuis JSONBin.io à l'ouverture
+      loadFromCloud();
+
       document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') closeLightbox();
       });
     });
 
-    function saveToLocalStorage() {
-      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
+    function loadFromCloud() {
+      if (!JSONBIN_BIN_ID || JSONBIN_BIN_ID.includes('TON_BIN_ID')) return;
+      updateSyncStatus(false, 'Chargement Cloud...');
+      fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`, {
+        headers: { "X-Master-Key": JSONBIN_MASTER_KEY }
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.record && data.record.domains && data.record.importers) {
+          state = data.record;
+          render();
+          updateSyncStatus(true, 'En direct (Cloud)');
+        }
+      })
+      .catch(err => {
+        console.error("Erreur chargement cloud", err);
+        updateSyncStatus(false, 'Mode Local');
+      });
     }
 
-    function loadFromLocalStorage() {
-      try {
-        const saved = localStorage.getItem(STORAGE_KEY);
-        if (saved) {
-          const parsed = JSON.parse(saved);
-          if (parsed && parsed.domains && parsed.importers) state = parsed;
-        }
-      } catch (e) {}
+    function saveToCloud() {
+      if (!JSONBIN_BIN_ID || JSONBIN_BIN_ID.includes('TON_BIN_ID')) return;
+      updateSyncStatus(false, 'Sauvegarde Cloud...');
+      fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`, {
+        method: 'PUT',
+        headers: {
+          "Content-Type": "application/json",
+          "X-Master-Key": JSONBIN_MASTER_KEY
+        },
+        body: JSON.stringify(state)
+      })
+      .then(res => res.json())
+      .then(() => {
+        updateSyncStatus(true, 'En direct (Cloud)');
+      })
+      .catch(err => {
+        console.error("Erreur sauvegarde cloud", err);
+        updateSyncStatus(false, 'Erreur Sauvegarde');
+      });
+    }
+
+    function updateSyncStatus(connected, text) {
+      const dot = document.getElementById('sync-dot');
+      const txt = document.getElementById('sync-text');
+      txt.innerText = text;
+      dot.className = 'status-dot' + (connected ? '' : ' syncing');
     }
 
     function resetAllData() {
-      if (confirm('Réinitialiser la carte ?')) {
-        localStorage.removeItem(STORAGE_KEY);
+      if (confirm('Réinitialiser la carte pour tout le monde ?')) {
         state = {
           domains: JSON.parse(JSON.stringify(DEFAULT_DOMAINS)),
-          importers: JSON.parse(JSON.stringify(DEFAULT_IMPORTERS)),
+          importers: [],
           connections: []
         };
         calculateInitialPositions();
+        saveToCloud();
         render();
       }
     }
@@ -374,7 +368,7 @@
       state.domains.forEach(d => { d.x = 0; d.y = 0; });
       state.importers.forEach(i => { i.x = 0; i.y = 0; });
       calculateInitialPositions();
-      saveToLocalStorage();
+      saveToCloud();
       render();
     }
 
@@ -396,7 +390,7 @@
         `;
 
         card.addEventListener('click', (e) => onDomainClick(d.id, e));
-        makeDraggable(card, (x, y) => { d.x = x; d.y = y; updateConnections(); }, () => saveToLocalStorage());
+        makeDraggable(card, (x, y) => { d.x = x; d.y = y; updateConnections(); }, () => saveToCloud());
         workspace.appendChild(card);
       });
 
@@ -421,7 +415,7 @@
         card.addEventListener('mouseenter', () => highlightConnections(imp.id, true));
         card.addEventListener('mouseleave', () => highlightConnections(imp.id, false));
         card.addEventListener('click', (e) => onImporterClick(imp.id, e));
-        makeDraggable(card, (x, y) => { imp.x = x; imp.y = y; updateConnections(); }, () => saveToLocalStorage());
+        makeDraggable(card, (x, y) => { imp.x = x; imp.y = y; updateConnections(); }, () => saveToCloud());
         workspace.appendChild(card);
       });
 
@@ -518,7 +512,7 @@
         const idx = state.connections.findIndex(c => c.importerId === selectedImporterForLinking && c.domainId === domainId);
         if (idx >= 0) state.connections.splice(idx, 1);
         else state.connections.push({ importerId: selectedImporterForLinking, domainId: domainId });
-        saveToLocalStorage();
+        saveToCloud();
         updateConnections();
       }
     }
@@ -588,7 +582,7 @@
         imp.phone = document.getElementById('m-input-phone').value;
         imp.avatar = document.getElementById('m-input-avatar').value;
         imp.notes = document.getElementById('m-input-notes').value;
-        saveToLocalStorage();
+        saveToCloud();
         render();
       }
       closeModal();
@@ -598,7 +592,7 @@
       e.stopPropagation();
       state.domains = state.domains.filter(d => d.id !== id);
       state.connections = state.connections.filter(c => c.domainId !== id);
-      saveToLocalStorage();
+      saveToCloud();
       render();
     }
 
@@ -606,7 +600,7 @@
       e.stopPropagation();
       state.importers = state.importers.filter(i => i.id !== id);
       state.connections = state.connections.filter(c => c.importerId !== id);
-      saveToLocalStorage();
+      saveToCloud();
       render();
     }
 
@@ -616,14 +610,14 @@
         if (name) {
           const region = prompt('Région :', 'Bourgogne');
           state.domains.push({ id: 'd_' + Date.now(), name: name, region: region || 'Domaine', x: window.innerWidth / 2 - 65, y: window.innerHeight / 2 - 40 });
-          saveToLocalStorage();
+          saveToCloud();
           render();
         }
       } else if (type === 'importer') {
         const company = prompt('Nom de l\'Entreprise :');
         if (company) {
           state.importers.push({ id: 'i_' + Date.now(), company: company, name: '', activity: 'Importateur', email: '', phone: '', avatar: '', notes: '', x: window.innerWidth / 2 - 300, y: window.innerHeight / 2 });
-          saveToLocalStorage();
+          saveToCloud();
           render();
         }
       }
@@ -661,7 +655,7 @@
             const loadedState = JSON.parse(e.target.result);
             if (loadedState.domains && loadedState.importers) {
               state = loadedState;
-              saveToLocalStorage();
+              saveToCloud();
               render();
             }
           } catch (err) { alert('Fichier JSON invalide.'); }
@@ -715,9 +709,9 @@
             }
 
             calculateInitialPositions();
-            saveToLocalStorage();
+            saveToCloud();
             render();
-            alert(`${state.importers.length} importateurs chargés !`);
+            alert(`${state.importers.length} importateurs chargés et envoyés sur le Cloud !`);
           }
         };
         reader.readAsArrayBuffer(file);
