@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bouquet Fine Wine - Carte Malaisie 2026</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=SF+Pro+Display:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+  <style>
+    :root {
+      --bg-color: #F4F3EF;
+      --card-bg: rgba(255, 255, 255, 0.92);
+      --card-border: rgba(210, 205, 195, 0.6);
+      --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+      --primary-wine: #58111A;
+      --accent-gold: #C5A059;
+      --text-dark: #1D1D1F;
+      --text-muted: #86868B;
+      --font-title: 'Playfair Display', Georgia, serif;
+      --font-body: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+    body { background-color: var(--bg-color); font-family: var(--font-body); color: var(--text-dark); width: 100vw; height: 100vh; overflow: hidden; position: relative; }
+
+    /* Écran de connexion privé */
+    #lock-screen {
+      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+      background: var(--bg-color); z-index: 1000; display: flex;
+      align-items: center; justify-content: center; flex-direction: column;
+    }
+    .lock-box {
+      background: white; padding: 40px; border-radius: 24px;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.08); text-align: center;
+      max-width: 360px; width: 90%; border: 1px solid var(--card-border);
+    }
+    .lock-box h2 { font-family: var(--font-title); color: var(--primary-wine); margin-bottom: 8px; font-size: 22px; }
+    .lock-box p { color: var(--text-muted); font-size: 13px; margin-bottom: 24px; }
+    .lock-input {
+      width: 100%; padding: 12px 16px; border-radius: 12px;
+      border: 1px solid var(--card-border); font-size: 14px; margin-bottom: 16px;
+      text-align: center; outline: none; background: #F4F3EF;
+    }
+    .lock-btn {
+      width: 100%; padding: 12px; background: var(--primary-wine);
+      color: white; border: none; border-radius: 12px; font-weight: 600;
+      cursor: pointer; transition: background 0.2s;
+    }
+    .lock-btn:hover { background: #420b13; }
+    #lock-error { color: #c0392b; font-size: 12px; margin-top: 12px; display: none; }
+
+    header {
+      position: absolute; top: 16px; left: 50%; transform: translateX(-50%); z-index: 100;
+      display: flex; align-items: center; gap: 16px; padding: 10px 22px;
+      background: rgba(255, 255, 255, 0.88); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.9); border-radius: 40px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+    }
+
+    .brand-title { display: flex; align-items: center; gap: 10px; }
+    .brand-title h1 { font-family: var(--font-title); font-size: 18px; font-weight: 600; color: var(--primary-wine); }
+    .badge-country { background: var(--accent-gold); color: white; font-size: 10px; font-weight: 600; padding: 3px 8px; border-radius: 12px; text-transform: uppercase; }
+
+    .sync-indicator { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-muted); background: rgba(0,0,0,0.04); padding: 4px 10px; border-radius: 12px; }
+    .status-dot { width: 7px; height: 7px; border-radius: 50%; background: #34C759; }
+
+    .toolbar-actions { display: flex; align-items: center; gap: 6px; }
+    .btn { background: rgba(240, 238, 233, 0.8); border: 1px solid transparent; color: var(--text-dark); padding: 7px 12px; border-radius: 18px; font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; gap: 5px; }
+    .btn:hover { background: white; border-color: rgba(0,0,0,0.1); }
+    .btn-primary { background: var(--primary-wine); color: white; }
+    .btn-active { background: var(--accent-gold) !important; color: white !important; }
+
+    #workspace { width: 100%; height: 100%; position: relative; }
+    svg#connections-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 5; }
+    path.connection-line { fill: none; stroke: var(--accent-gold); stroke-width: 2px; stroke-dasharray: 6 4; opacity: 0.4; transition: opacity 0.3s ease; }
+    path.connection-line.highlighted { stroke: var(--primary-wine) !important; stroke-width: 3.5px !important; stroke-dasharray: none !important; opacity: 1 !important; filter: drop-shadow(0 2px 4px rgba(88, 17, 26, 0.25)); }
+
+    .draggable-card { position: absolute; background: var(--card-bg); backdrop-filter: blur(16px); border: 1px solid var(--card-border); border-radius: 16px; box-shadow: var(--card-shadow); cursor: grab; z-index: 10; transition: transform 0.15s ease, box-shadow 0.2s ease, opacity 0.3s ease; }
+    .draggable-card.dimmed { opacity: 0.2; }
+
+    .domain-card { padding: 8px 12px; min-width: 135px; max-width: 165px; text-align: center; border-top: 3px solid var(--primary-wine); border-radius: 14px; }
+    .domain-card.highlighted { border-color: var(--accent-gold); box-shadow: 0 0 20px rgba(197, 160, 89, 0.35); transform: scale(1.05); z-index: 40 !important; }
+    .domain-region { font-size: 8px; font-weight: 600; text-transform: uppercase; color: var(--accent-gold); margin-bottom: 2px; }
+    .domain-name { font-family: var(--font-title); font-size: 13px; font-weight: 600; color: var(--primary-wine); }
+
+    .importer-card { padding: 10px 14px; width: 220px; display: flex; align-items: center; gap: 12px; border-radius: 16px; }
+    .importer-card.highlighted { border-color: var(--primary-wine); box-shadow: 0 0 25px rgba(88, 17, 26, 0.22); transform: scale(1.04); z-index: 45 !important; }
+    .importer-card.linking-source { border-color: var(--accent-gold); box-shadow: 0 0 0 3px rgba(197, 160, 89, 0.4); }
+    .importer-avatar { width: 54px; height: 54px; border-radius: 12px; object-fit: cover; background: #E8E5DF; flex-shrink: 0; }
+    .importer-company { font-weight: 600; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .importer-contact { font-size: 11px; color: var(--text-muted); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    .card-actions { position: absolute; top: -8px; right: -8px; display: none; gap: 4px; }
+    .draggable-card:hover .card-actions { display: flex; }
+    .btn-icon { width: 22px; height: 22px; border-radius: 50%; background: rgba(0,0,0,0.7); color: white; border: none; font-size: 11px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+
+    #cave-center-zone { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 620px; height: 380px; border: 2px dashed rgba(197, 160, 89, 0.25); border-radius: 32px; pointer-events: none; display: flex; flex-direction: column; align-items: center; padding-top: 14px; }
+    .cave-header-title { font-family: var(--font-title); font-size: 24px; color: rgba(88, 17, 26, 0.2); font-weight: 700; }
+
+    .modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.3); backdrop-filter: blur(8px); z-index: 200; display: none; align-items: center; justify-content: center; }
+    .modal-overlay.active { display: flex; }
+    .modal-card { background: white; width: 440px; border-radius: 28px; padding: 28px; position: relative; max-height: 90vh; overflow-y: auto; }
+    .modal-header { display: flex; align-items: center; gap: 16px; margin-bottom: 20px; }
+    
+    .modal-avatar { 
+      width: 80px; height: 80px; border-radius: 16px; object-fit: cover; border: 2px solid var(--accent-gold); 
+      cursor: zoom-in; transition: transform 0.2s ease;
+    }
+    .modal-avatar:hover { transform: scale(1.06); }
+
+    .info-row { margin-bottom: 12px; }
+    .info-row label { display: block; font-size: 10px; text-transform: uppercase; color: var(--accent-gold); font-weight: 600; margin-bottom: 3px; }
+    .modal-field-edit { width: 100%; font-size: 13px; background: #F4F3EF; padding: 8px 12px; border-radius: 10px; border: 1px solid rgba(0,0,0,0.05); font-family: inherit; }
+    .modal-close { position: absolute; top: 20px; right: 20px; background: #E8E5DF; border: none; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; }
+
+    .file-upload-btn {
+      display: inline-block; padding: 6px 12px; background: rgba(197, 160, 89, 0.15);
+      color: var(--primary-wine); border: 1px dashed var(--accent-gold); border-radius: 10px;
+      font-size: 12px; font-weight: 500; cursor: pointer; margin-top: 4px; text-align: center; width: 100%;
+    }
+    .file-upload-btn:hover { background: rgba(197, 160, 89, 0.25); }
+
+    .lightbox-overlay {
+      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+      background: rgba(0, 0, 0, 0.88); backdrop-filter: blur(12px);
+      z-index: 300; display: none; align-items: center; justify-content: center;
+      cursor: zoom-out; opacity: 0; transition: opacity 0.25s ease;
+    }
+    .lightbox-overlay.active { display: flex; opacity: 1; }
+    .lightbox-img {
+      width: min(85vw, 650px);
+      height: min(85vh, 650px);
+      object-fit: contain; border-radius: 20px;
+      box-shadow: 0 25px 60px rgba(0,0,0,0.6); border: 2px solid var(--accent-gold);
+      background: #111;
+    }
+
+    #linking-banner { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--accent-gold); color: white; padding: 10px 24px; border-radius: 20px; font-size: 13px; z-index: 90; display: none; }
+    #file-input, #image-upload-input { display: none; }
+  </style>
+</head>
+<body>
+
+  <!-- Écran de connexion -->
+  <div id="lock-screen">
+    <div class="lock-box">
+      <h2>Bouquet Fine Wine</h2>
+      <p>Accès restreint à la Carte Malaisie 2026</p>
+      <input type="password" id="password-input" class="lock-input" placeholder="Mot de passe" onkeydown="if(event.key==='Enter') unlockApp()">
+      <button class="lock-btn" onclick="unlockApp()">Accéder</button>
+      <div id="lock-error">Mot de passe incorrect</div>
+    </div>
+  </div>
+
+  <header>
+    <div class="brand-title">
+      <h1>Bouquet Fine Wine</h1>
+      <span class="badge-country">Malaisie</span>
+    </div>
+
+    <div class="sync-indicator">
+      <div class="status-dot"></div>
+      <span>Sauvegarde Auto Local</span>
+    </div>
+
+    <div class="toolbar-actions">
+      <button class="btn" onclick="openAddModal('domain')"><span>+</span> Domaine</button>
+      <button class="btn" onclick="openAddModal('importer')"><span>+</span> Importateur</button>
+      <button class="btn" id="btn-toggle-link" onclick="toggleLinkingMode()">🔗 Mode Relier</button>
+      <button class="btn" onclick="autoLayout()">✨ Re-disposer</button>
+      <button class="btn" onclick="triggerExcelImport()">📥 Importer Excel/CSV</button>
+      <button class="btn btn-primary" onclick="exportData()">💾 Exporter JSON</button>
+      <button class="btn" onclick="triggerJSONImport()">📂 Importer JSON</button>
+      <button class="btn" style="color: #c0392b;" onclick="resetAllData()">🗑️ RàZ</button>
+    </div>
+  </header>
+
+  <div id="workspace">
+    <div id="cave-center-zone">
+      <div class="cave-header-title">LA CAVE • MALAISIE</div>
+    </div>
+    <svg id="connections-layer"></svg>
+  </div>
+
+  <div id="linking-banner">Mode Relier : Cliquez sur un domaine pour créer/supprimer la liaison</div>
+
+  <!-- Modal Fiche Info Importateur -->
+  <div class="modal-overlay" id="info-modal">
+    <div class="modal-card">
+      <button class="modal-close" onclick="closeModal()">✕</button>
+      
+      <div class="modal-header">
+        <img src="" id="m-avatar" class="modal-avatar" alt="Logo" title="Cliquer pour agrandir en grand" onclick="openLightbox()">
+        <div>
+          <h2 id="m-company-title" style="font-family: var(--font-title); color: var(--primary-wine);">Entreprise</h2>
+          <p id="m-contact-title" style="color: var(--text-muted); font-size: 13px;">Contact</p>
+        </div>
+      </div>
+
+      <div class="info-row">
+        <label>Photo / Logo</label>
+        <label class="file-upload-btn" for="image-upload-input">📷 Importer une photo depuis l'ordinateur...</label>
+        <input type="file" id="image-upload-input" accept="image/*" onchange="handleImageUpload(event)">
+        <input type="text" id="m-input-avatar" class="modal-field-edit" style="margin-top:6px;" placeholder="ou coller un lien URL https://...">
+      </div>
+
+      <div class="info-row"><label>Entreprise</label><input type="text" id="m-input-company" class="modal-field-edit"></div>
+      <div class="info-row"><label>Contact (Nom)</label><input type="text" id="m-input-contact" class="modal-field-edit"></div>
+      <div class="info-row"><label>Activité</label><input type="text" id="m-input-activity" class="modal-field-edit"></div>
+      <div class="info-row"><label>Email</label><input type="email" id="m-input-email" class="modal-field-edit"></div>
+      <div class="info-row"><label>Téléphone</label><input type="text" id="m-input-phone" class="modal-field-edit"></div>
+      <div class="info-row"><label>Remarque / Notes</label><textarea id="m-input-notes" rows="3" class="modal-field-edit"></textarea></div>
+
+      <button class="btn btn-primary" style="width:100%; justify-content:center; margin-top:10px;" onclick="saveModalChanges()">Enregistrer</button>
+    </div>
+  </div>
+
+  <!-- Visionneuse Photo Plein Écran -->
+  <div class="lightbox-overlay" id="lightbox" onclick="closeLightbox()">
+    <img src="" id="lightbox-img" class="lightbox-img" alt="Photo agrandie">
+  </div>
+
+  <input type="file" id="file-input" onchange="handleFileSelect(event)">
+
+  <script>
+    const SECRET_PASSWORD = "Bouquet2026";
+
+    function unlockApp() {
+      const pwd = document.getElementById('password-input').value;
+      if (pwd === SECRET_PASSWORD) {
+        document.getElementById('lock-screen').style.display = 'none';
+        sessionStorage.setItem('unlocked', 'true');
+      } else {
+        document.getElementById('lock-error').style.display = 'block';
+      }
+    }
+
+    if (sessionStorage.getItem('unlocked') === 'true') {
+      document.getElementById('lock-screen').style.display = 'none';
+    }
+
+    const STORAGE_KEY = 'bouquet_wine_malaisie_2026_data_v2';
+
+    const DEFAULT_DOMAINS = [
+      { id: 'd1', name: 'JL Vergnon', region: 'Champagne', x: 776, y: 566.5 },
+      { id: 'd2', name: 'Jérôme Blin', region: 'Champagne', x: 916, y: 566.5 },
+      { id: 'd3', name: 'Maurice Choppin', region: 'Champagne', x: 1056, y: 566.5 },
+      { id: 'd4', name: 'Château des Rontets', region: 'Bourgogne', x: 1196, y: 566.5 },
+      { id: 'd5', name: 'Jean Collet', region: 'Bourgogne', x: 776, y: 631.5 },
+      { id: 'd6', name: 'Tessier', region: 'Bourgogne', x: 916, y: 631.5 },
+      { id: 'd7', name: 'Philippe Chavy', region: 'Bourgogne', x: 1056, y: 631.5 },
+      { id: 'd8', name: 'Clos de la Chapelle', region: 'Bourgogne', x: 1196, y: 631.5 },
+      { id: 'd9', name: 'Thierry Mortet', region: 'Bourgogne', x: 776, y: 696.5 },
+      { id: 'd10', name: 'Dugat Py', region: 'Bourgogne', x: 916, y: 696.5 },
+      { id: 'd11', name: 'Stefan Meyer', region: 'Allemagne', x: 1056, y: 696.5 }
+    ];
+
+    const DEFAULT_IMPORTERS = [
+      { id: "i_1", company: "Top 30 Media", name: "Kailash", activity: "Média", email: "kailash@top30media.com", phone: "60123119940", avatar: "", notes: "", x: 0, y: 0 },
+      { id: "i_2", company: "Cathay Pacific Airways Limited", name: "Deanna Cheah", activity: "Commercial - Compagnie aérienne", email: "deanna_cheah@cathaypacific.com", phone: "60126062747", avatar: "", notes: "", x: 0, y: 0 },
+      { id: "i_3", company: "Godai SDN BHD", name: "Solomiia Begun", activity: "Wine Exporter", email: "salome.vvv77@gmail.com", phone: "767044747", avatar: "", notes: "Agent export sur Malaisie Thailand Cambodge Kazakstan etc", x: 0, y: 0 },
+      { id: "i_4", company: "Sip with Jojo", name: "Jocelyn Wong", activity: "dégustation, evenementiel, private tasting", email: "jojo@sipwithjojo.my", phone: "60133223321", avatar: "", notes: "dégustation, evenementiel, private tasting", x: 0, y: 0 },
+      { id: "i_5", company: "Di Tullio & Sons", name: "Olivier Di Tullio", activity: "Importer", email: "olivier@ditullio-and-sons.com", phone: "60126430908", avatar: "", notes: "Importateur et agent en france comme nous - travaille avec beaucoup de restaurant en Malaisie", x: 0, y: 0 },
+      { id: "i_6", company: "Milawa", name: "Jinee Chung", activity: "Importer", email: "jinee@milawa.com", phone: "60123888534", avatar: "", notes: "Top importateur", x: 0, y: 0 },
+      { id: "i_7", company: "CCI France Malaysia", name: "Pauline Goh", activity: "Chambre des commerces", email: "paulinegoh30@gmail.com", phone: "60192121554", avatar: "", notes: "recuprer la vidéo commerciale du stand", x: 0, y: 0 },
+      { id: "i_8", company: "Mario Mahmood", name: "Mario Mahmood", activity: "Avocat", email: "mariomahmood@gmail.com", phone: "60122880821", avatar: "", notes: "", x: 0, y: 0 },
+      { id: "i_9", company: "Nam Lee Cheong SDN BHD", name: "Ginky Chen", activity: "Procurement Manager", email: "ginky.chen@namleecheong.com.my", phone: "60321413177", avatar: "", notes: "", x: 0, y: 0 },
+      { id: "i_10", company: "Waldorf Astoria", name: "Mandy Chin", activity: "Director of wine", email: "mandy.chin@waldorastoria.com", phone: "60122958211", avatar: "", notes: "", x: 0, y: 0 },
+      { id: "i_11", company: "Sommelier Association of Malaysia", name: "Danny Leong", activity: "Sommelerie", email: "president@somlay.org.my", phone: "60178734148", avatar: "", notes: "Club sommelier", x: 0, y: 0 },
+      { id: "i_12", company: "Vintage group companies", name: "M Nathan", activity: "Importer", email: "nhj111@gmail.com", phone: "60123088196", avatar: "", notes: "CEO", x: 0, y: 0 },
+      { id: "i_13", company: "Fortier Wines & Spirit", name: "James Pook", activity: "Importer", email: "james.pook@fws.com.my", phone: "60125983760", avatar: "", notes: "Marketing Manager", x: 0, y: 0 },
+      { id: "i_14", company: "Hong Bee Group", name: "Nicole Chua", activity: "Importer", email: "nicolechua.hbd@hongbee.com.my", phone: "60126608787", avatar: "", notes: "Key Account Manager", x: 0, y: 0 },
+      { id: "i_15", company: "Dolce Degusté", name: "Michelle Kay", activity: "agent auprès des restaurants malaisien", email: "dolcedeguste@gmail.com", phone: "60173388610", avatar: "", notes: "ambassador", x: 0, y: 0 },
+      { id: "i_16", company: "Five Connoisseurs", name: "Evans Quah", activity: "importer", email: "evans@conoisseurs.com.my", phone: "60166966968", avatar: "", notes: "Sales Manager", x: 0, y: 0 },
+      { id: "i_17", company: "Wine Republik", name: "Andrew Leong", activity: "importer", email: "info@thewinerepublik.com", phone: "60178338858", avatar: "", notes: "Bread and Wine Gallery", x: 0, y: 0 },
+      { id: "i_18", company: "Bai Jiu Group SDN BHD", name: "Paolo Tan", activity: "Distributeur", email: "bjgroup19@gmail.com", phone: "163327833", avatar: "", notes: "", x: 0, y: 0 },
+      { id: "i_19", company: "Burg Life / Corevino", name: "Ken Liew", activity: "importer", email: "ken@corevino.com", phone: "60189168309", avatar: "", notes: "top importer", x: 0, y: 0 },
+      { id: "i_20", company: "Sunway University", name: "Dr Joaquim Dias Soero", activity: "Professor University", email: "joaquimd@sunway.edu.my", phone: "60374918622", avatar: "", notes: "Prof université", x: 0, y: 0 },
+      { id: "i_21", company: "Monopole", name: "Edwin Lye", activity: "General Manager", email: "edwin@monopole.com.my", phone: "60108181882", avatar: "", notes: "Top Importer", x: 0, y: 0 },
+      { id: "i_22", company: "W Wine Liquor Warehouse", name: "Andrew", activity: "importer", email: "andrew@winewarehouse.com.my", phone: "60123824113", avatar: "", notes: "", x: 0, y: 0 },
+      { id: "i_23", company: "The Tipsy Group", name: "Daniel Chan", activity: "Wine Bar", email: "", phone: "126809078", avatar: "", notes: "Wine Bar", x: 0, y: 0 },
+      { id: "i_24", company: "Equatorial", name: "Donald Lim", activity: "Chief executive officer", email: "donlim@hec.equatorial.com", phone: "60322757817", avatar: "", notes: "Hotel", x: 0, y: 0 },
+      { id: "i_25", company: "Youngmedia", name: "Joey Lim", activity: "Media", email: "helloyoungmedia@gmail.com", phone: "60127009102", avatar: "", notes: "Media - video a recuperer de nous", x: 0, y: 0 },
+      { id: "i_26", company: "Finlux SDN BHD", name: "Chew Lai Yin", activity: "Importer", email: "finux@pd.jaring.my", phone: "60162272826", avatar: "", notes: "Entry level range - aime blin - Meyer - Bourgogne regional entrés de gamme", x: 0, y: 0 },
+      { id: "i_27", company: "Hanareya Group", name: "Ruby Song", activity: "Importer", email: "ruby@hanareyagroup.com", phone: "60123222317", avatar: "", notes: "Head of Beverages & distribution", x: 0, y: 0 },
+      { id: "i_28", company: "Roche Bobois Paris", name: "Kerrie Yap", activity: "boutique", email: "k.yap@roche-bobois.com", phone: "60162210832", avatar: "", notes: "", x: 0, y: 0 },
+      { id: "i_29", company: "Lush Food Group", name: "Tim Whitehead", activity: "Distributor", email: "tim@lushfoodgroup.com", phone: "60123624108", avatar: "", notes: "Distributeur de vins dans les hotels et endroits de luxes", x: 0, y: 0 },
+      { id: "i_30", company: "Bacchus Wines SDN", name: "Yoyo Wong", activity: "importer", email: "yoyowong.bacchus@gmail.com", phone: "60162121534", avatar: "", notes: "", x: 0, y: 0 }
+    ];
+
+    let state = {
+      domains: JSON.parse(JSON.stringify(DEFAULT_DOMAINS)),
+      importers: JSON.parse(JSON.stringify(DEFAULT_IMPORTERS)),
+      connections: []
+    };
+
+    let isLinkingMode = false;
+    let selectedImporterForLinking = null;
+    let currentEditingId = null;
+
+    window.addEventListener('DOMContentLoaded', () => {
+      loadFromLocalStorage();
+      calculateInitialPositions();
+      render();
+      window.addEventListener('resize', updateConnections);
+      
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeLightbox();
+      });
+    });
+
+    function saveToLocalStorage() {
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
+    }
+
+    function loadFromLocalStorage() {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (parsed && parsed.domains && parsed.importers) state = parsed;
+        }
+      } catch (e) {}
+    }
+
+    function resetAllData() {
+      if (confirm('Réinitialiser la carte ?')) {
+        localStorage.removeItem(STORAGE_KEY);
+        state = {
+          domains: JSON.parse(JSON.stringify(DEFAULT_DOMAINS)),
+          importers: JSON.parse(JSON.stringify(DEFAULT_IMPORTERS)),
+          connections: []
+        };
+        calculateInitialPositions();
+        render();
+      }
+    }
+
+    function calculateInitialPositions() {
+      const cx = window.innerWidth / 2;
+      const cy = window.innerHeight / 2;
+
+      const cols = 4;
+      const gapX = 140;
+      const gapY = 65;
+      const startX = cx - ((cols - 1) * gapX) / 2 - 65;
+      const startY = cy - 95;
+
+      state.domains.forEach((d, index) => {
+        if (d.x === 0 && d.y === 0) {
+          d.x = startX + (index % cols) * gapX;
+          d.y = startY + Math.floor(index / cols) * gapY;
+        }
+      });
+
+      const totalImp = state.importers.length;
+      if (totalImp > 0) {
+        const rx = 560;
+        const ry = 310;
+
+        state.importers.forEach((imp, index) => {
+          if (imp.x === 0 && imp.y === 0) {
+            const angle = (index / totalImp) * 2 * Math.PI - Math.PI / 2;
+            imp.x = cx + rx * Math.cos(angle) - 100;
+            imp.y = cy + ry * Math.sin(angle) - 25;
+          }
+        });
+      }
+    }
+
+    function autoLayout() {
+      state.domains.forEach(d => { d.x = 0; d.y = 0; });
+      state.importers.forEach(i => { i.x = 0; i.y = 0; });
+      calculateInitialPositions();
+      saveToLocalStorage();
+      render();
+    }
+
+    function render() {
+      const workspace = document.getElementById('workspace');
+      document.querySelectorAll('.draggable-card').forEach(el => el.remove());
+
+      state.domains.forEach(d => {
+        const card = document.createElement('div');
+        card.className = 'draggable-card domain-card';
+        card.id = `domain-${d.id}`;
+        card.style.left = `${d.x}px`;
+        card.style.top = `${d.y}px`;
+
+        card.innerHTML = `
+          <div class="card-actions"><button class="btn-icon" onclick="deleteDomain('${d.id}', event)">✕</button></div>
+          <div class="domain-region">${d.region || 'Domaine'}</div>
+          <div class="domain-name">${d.name}</div>
+        `;
+
+        card.addEventListener('click', (e) => onDomainClick(d.id, e));
+        makeDraggable(card, (x, y) => { d.x = x; d.y = y; updateConnections(); }, () => saveToLocalStorage());
+        workspace.appendChild(card);
+      });
+
+      state.importers.forEach(imp => {
+        const card = document.createElement('div');
+        card.className = 'draggable-card importer-card';
+        card.id = `importer-${imp.id}`;
+        card.style.left = `${imp.x}px`;
+        card.style.top = `${imp.y}px`;
+
+        const avatarUrl = imp.avatar || 'https://via.placeholder.com/150/E8E5DF/58111A?text=' + encodeURIComponent(imp.company ? imp.company.charAt(0) : 'W');
+
+        card.innerHTML = `
+          <div class="card-actions"><button class="btn-icon" onclick="deleteImporter('${imp.id}', event)">✕</button></div>
+          <img src="${avatarUrl}" class="importer-avatar" alt="Logo">
+          <div style="overflow:hidden;">
+            <div class="importer-company">${imp.company || 'Sans nom'}</div>
+            <div class="importer-contact">${imp.name || 'Cliquer pour fiche'}</div>
+          </div>
+        `;
+
+        card.addEventListener('mouseenter', () => highlightConnections(imp.id, true));
+        card.addEventListener('mouseleave', () => highlightConnections(imp.id, false));
+        card.addEventListener('click', (e) => onImporterClick(imp.id, e));
+        makeDraggable(card, (x, y) => { imp.x = x; imp.y = y; updateConnections(); }, () => saveToLocalStorage());
+        workspace.appendChild(card);
+      });
+
+      updateConnections();
+    }
+
+    function updateConnections() {
+      const svg = document.getElementById('connections-layer');
+      svg.innerHTML = '';
+
+      state.connections.forEach(conn => {
+        const impEl = document.getElementById(`importer-${conn.importerId}`);
+        const domEl = document.getElementById(`domain-${conn.domainId}`);
+
+        if (impEl && domEl) {
+          const impRect = impEl.getBoundingClientRect();
+          const domRect = domEl.getBoundingClientRect();
+
+          const x1 = impRect.left + impRect.width / 2;
+          const y1 = impRect.top + impRect.height / 2;
+          const x2 = domRect.left + domRect.width / 2;
+          const y2 = domRect.top + domRect.height / 2;
+
+          const dx = x2 - x1;
+          const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+          path.setAttribute('d', `M ${x1} ${y1} C ${x1 + dx * 0.5} ${y1}, ${x1 + dx * 0.5} ${y2}, ${x2} ${y2}`);
+          path.setAttribute('class', 'connection-line');
+          path.setAttribute('data-importer', conn.importerId);
+
+          svg.appendChild(path);
+        }
+      });
+    }
+
+    function highlightConnections(importerId, highlight) {
+      const connectedDomainIds = state.connections.filter(c => c.importerId === importerId).map(c => c.domainId);
+      document.querySelectorAll('.draggable-card').forEach(card => {
+        const isCurrentImp = card.id === `importer-${importerId}`;
+        const isConnectedDom = connectedDomainIds.some(id => card.id === `domain-${id}`);
+        if (highlight && !isCurrentImp && !isConnectedDom) card.classList.add('dimmed');
+        else card.classList.remove('dimmed');
+      });
+      document.querySelectorAll('.connection-line').forEach(line => {
+        if (highlight && line.getAttribute('data-importer') === importerId) line.classList.add('highlighted');
+        else line.classList.remove('highlighted');
+      });
+    }
+
+    function makeDraggable(element, onDrag, onDragEnd) {
+      let active = false, startX, startY, hasDragged = false;
+      element.addEventListener('mousedown', (e) => {
+        if (e.target.tagName === 'BUTTON' || e.target.classList.contains('btn-icon')) return;
+        startX = e.clientX; startY = e.clientY; hasDragged = false; active = true;
+        
+        const drag = (ev) => {
+          if (active) {
+            if (Math.abs(ev.clientX - startX) > 4 || Math.abs(ev.clientY - startY) > 4) {
+              hasDragged = true; element.setAttribute('data-dragged', 'true');
+            }
+            if (hasDragged) {
+              ev.preventDefault();
+              element.style.left = `${element.offsetLeft + (ev.clientX - startX)}px`;
+              element.style.top = `${element.offsetTop + (ev.clientY - startY)}px`;
+              startX = ev.clientX; startY = ev.clientY;
+              onDrag(element.offsetLeft, element.offsetTop);
+            }
+          }
+        };
+        const dragEnd = () => {
+          active = false;
+          document.removeEventListener('mousemove', drag);
+          document.removeEventListener('mouseup', dragEnd);
+          if (hasDragged && onDragEnd) onDragEnd();
+          setTimeout(() => element.removeAttribute('data-dragged'), 50);
+        };
+        document.addEventListener('mousemove', drag);
+        document.addEventListener('mouseup', dragEnd);
+      });
+    }
+
+    function onImporterClick(id, e) {
+      const card = document.getElementById(`importer-${id}`);
+      if (card && card.getAttribute('data-dragged') === 'true') return;
+      if (isLinkingMode) {
+        if (selectedImporterForLinking === id) selectedImporterForLinking = null;
+        else selectedImporterForLinking = id;
+      } else {
+        openModal(id);
+      }
+    }
+
+    function onDomainClick(domainId, e) {
+      if (isLinkingMode && selectedImporterForLinking) {
+        const idx = state.connections.findIndex(c => c.importerId === selectedImporterForLinking && c.domainId === domainId);
+        if (idx >= 0) state.connections.splice(idx, 1);
+        else state.connections.push({ importerId: selectedImporterForLinking, domainId: domainId });
+        saveToLocalStorage();
+        updateConnections();
+      }
+    }
+
+    function toggleLinkingMode() {
+      isLinkingMode = !isLinkingMode;
+      document.getElementById('btn-toggle-link').classList.toggle('btn-active', isLinkingMode);
+      document.getElementById('linking-banner').style.display = isLinkingMode ? 'block' : 'none';
+    }
+
+    function openModal(importerId) {
+      currentEditingId = importerId;
+      const imp = state.importers.find(i => i.id === importerId);
+      if (!imp) return;
+      document.getElementById('m-company-title').innerText = imp.company || 'Entreprise';
+      document.getElementById('m-contact-title').innerText = imp.name || 'Sans contact';
+      
+      const avatarSrc = imp.avatar || 'https://via.placeholder.com/150/E8E5DF/58111A?text=' + encodeURIComponent(imp.company ? imp.company.charAt(0) : 'W');
+      document.getElementById('m-avatar').src = avatarSrc;
+      
+      document.getElementById('m-input-company').value = imp.company || '';
+      document.getElementById('m-input-contact').value = imp.name || '';
+      document.getElementById('m-input-activity').value = imp.activity || '';
+      document.getElementById('m-input-email').value = imp.email || '';
+      document.getElementById('m-input-phone').value = imp.phone || '';
+      document.getElementById('m-input-avatar').value = imp.avatar || '';
+      document.getElementById('m-input-notes').value = imp.notes || '';
+      document.getElementById('info-modal').classList.add('active');
+    }
+
+    function closeModal() { document.getElementById('info-modal').classList.remove('active'); }
+
+    function openLightbox() {
+      const avatarSrc = document.getElementById('m-avatar').src;
+      if (avatarSrc) {
+        const lightboxImg = document.getElementById('lightbox-img');
+        lightboxImg.src = avatarSrc;
+        document.getElementById('lightbox').classList.add('active');
+      }
+    }
+
+    function closeLightbox() {
+      document.getElementById('lightbox').classList.remove('active');
+    }
+
+    function handleImageUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const base64Image = e.target.result;
+        document.getElementById('m-input-avatar').value = base64Image;
+        document.getElementById('m-avatar').src = base64Image;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function saveModalChanges() {
+      if (!currentEditingId) return;
+      const imp = state.importers.find(i => i.id === currentEditingId);
+      if (imp) {
+        imp.company = document.getElementById('m-input-company').value;
+        imp.name = document.getElementById('m-input-contact').value;
+        imp.activity = document.getElementById('m-input-activity').value;
+        imp.email = document.getElementById('m-input-email').value;
+        imp.phone = document.getElementById('m-input-phone').value;
+        imp.avatar = document.getElementById('m-input-avatar').value;
+        imp.notes = document.getElementById('m-input-notes').value;
+        saveToLocalStorage();
+        render();
+      }
+      closeModal();
+    }
+
+    function deleteDomain(id, e) {
+      e.stopPropagation();
+      state.domains = state.domains.filter(d => d.id !== id);
+      state.connections = state.connections.filter(c => c.domainId !== id);
+      saveToLocalStorage();
+      render();
+    }
+
+    function deleteImporter(id, e) {
+      e.stopPropagation();
+      state.importers = state.importers.filter(i => i.id !== id);
+      state.connections = state.connections.filter(c => c.importerId !== id);
+      saveToLocalStorage();
+      render();
+    }
+
+    function openAddModal(type) {
+      if (type === 'domain') {
+        const name = prompt('Nom du Domaine / Château :');
+        if (name) {
+          const region = prompt('Région :', 'Bourgogne');
+          state.domains.push({ id: 'd_' + Date.now(), name: name, region: region || 'Domaine', x: window.innerWidth / 2 - 65, y: window.innerHeight / 2 - 40 });
+          saveToLocalStorage();
+          render();
+        }
+      } else if (type === 'importer') {
+        const company = prompt('Nom de l\'Entreprise :');
+        if (company) {
+          state.importers.push({ id: 'i_' + Date.now(), company: company, name: '', activity: 'Importateur', email: '', phone: '', avatar: '', notes: '', x: window.innerWidth / 2 - 300, y: window.innerHeight / 2 });
+          saveToLocalStorage();
+          render();
+        }
+      }
+    }
+
+    function exportData() {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state, null, 2));
+      const dl = document.createElement('a');
+      dl.setAttribute("href", dataStr);
+      dl.setAttribute("download", `bouquet_fine_wine_malaisie_${new Date().toISOString().slice(0,10)}.json`);
+      document.body.appendChild(dl);
+      dl.click();
+      dl.remove();
+    }
+
+    function triggerJSONImport() {
+      document.getElementById('file-input').accept = ".json";
+      document.getElementById('file-input').click();
+    }
+
+    function triggerExcelImport() {
+      document.getElementById('file-input').accept = ".csv, .xlsx, .xls";
+      document.getElementById('file-input').click();
+    }
+
+    function handleFileSelect(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+
+      if (file.name.endsWith('.json')) {
+        reader.onload = function(e) {
+          try {
+            const loadedState = JSON.parse(e.target.result);
+            if (loadedState.domains && loadedState.importers) {
+              state = loadedState;
+              saveToLocalStorage();
+              render();
+            }
+          } catch (err) { alert('Fichier JSON invalide.'); }
+        };
+        reader.readAsText(file);
+      } else {
+        reader.onload = function(e) {
+          const data = new Uint8Array(e.target.result);
+          const workbook = XLSX.read(data, { type: 'array' });
+          const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+          const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+          if (rows.length > 0) {
+            let headerIndex = -1, colCompany = -1, colName = -1, colActivity = -1, colEmail = -1, colPhone = -1, colNotes = -1;
+
+            for (let r = 0; r < Math.min(rows.length, 5); r++) {
+              const rowStr = rows[r].map(cell => String(cell || '').trim().toLowerCase());
+              const cComp = rowStr.findIndex(h => h.includes('entreprise') || h.includes('company'));
+              if (cComp >= 0) {
+                headerIndex = r; colCompany = cComp;
+                colName = rowStr.findIndex(h => h.includes('nom') || h.includes('contact'));
+                colActivity = rowStr.findIndex(h => h.includes('activité') || h.includes('activite'));
+                colEmail = rowStr.findIndex(h => h.includes('mail'));
+                colPhone = rowStr.findIndex(h => h.includes('phone') || h.includes('tél'));
+                colNotes = rowStr.findIndex(h => h.includes('remarque'));
+                break;
+              }
+            }
+
+            if (headerIndex === -1) { headerIndex = 0; colCompany = 0; colName = 1; colActivity = 2; colEmail = 3; colPhone = 4; colNotes = 5; }
+
+            state.importers = [];
+
+            for (let i = headerIndex + 1; i < rows.length; i++) {
+              const row = rows[i];
+              if (!row) continue;
+              const companyVal = colCompany >= 0 && row[colCompany] ? String(row[colCompany]).trim() : '';
+              if (!companyVal || companyVal.toLowerCase() === 'entreprise') continue;
+
+              state.importers.push({
+                id: 'i_ex_' + Date.now() + '_' + i,
+                company: companyVal,
+                name: colName >= 0 && row[colName] ? String(row[colName]).trim() : '',
+                activity: colActivity >= 0 && row[colActivity] ? String(row[colActivity]).trim() : '',
+                email: colEmail >= 0 && row[colEmail] ? String(row[colEmail]).trim() : '',
+                phone: colPhone >= 0 && row[colPhone] ? String(row[colPhone]).trim() : '',
+                avatar: '',
+                notes: colNotes >= 0 && row[colNotes] ? String(row[colNotes]).trim() : '',
+                x: 0, y: 0
+              });
+            }
+
+            calculateInitialPositions();
+            saveToLocalStorage();
+            render();
+            alert(`${state.importers.length} importateurs chargés !`);
+          }
+        };
+        reader.readAsArrayBuffer(file);
+      }
+    }
+  </script>
+</body>
+</html>
