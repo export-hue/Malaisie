@@ -26,7 +26,6 @@
     * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
     body { background-color: var(--bg-color); font-family: var(--font-body); color: var(--text-dark); width: 100vw; height: 100vh; overflow: hidden; position: relative; }
 
-    /* Écran de verrouillage */
     #lock-screen {
       position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
       background: var(--bg-color); z-index: 1000; display: flex;
@@ -144,7 +143,6 @@
 </head>
 <body>
 
-  <!-- Écran de connexion -->
   <div id="lock-screen">
     <div class="lock-box">
       <h2>Bouquet Fine Wine</h2>
@@ -187,7 +185,6 @@
 
   <div id="linking-banner">Mode Relier : Cliquez sur un domaine pour créer/supprimer la liaison</div>
 
-  <!-- Modal Fiche Info Importateur -->
   <div class="modal-overlay" id="info-modal">
     <div class="modal-card">
       <button class="modal-close" onclick="closeModal()">✕</button>
@@ -204,7 +201,7 @@
         <label>Photo / Logo</label>
         <label class="file-upload-btn" for="image-upload-input">📷 Importer une photo depuis l'ordinateur...</label>
         <input type="file" id="image-upload-input" accept="image/*" onchange="handleImageUpload(event)">
-        <input type="text" id="m-input-avatar" class="modal-field-edit" style="margin-top:6px;" placeholder="ou coller un lien URL https://...">
+        <input type="text" id="m-input-avatar" class="modal-field-edit" style="margin-top:6px;" placeholder="ou coller un lien URL https://..." oninput="autoConvertDriveUrl(this)">
       </div>
 
       <div class="info-row"><label>Entreprise</label><input type="text" id="m-input-company" class="modal-field-edit"></div>
@@ -225,7 +222,6 @@
   <input type="file" id="file-input" onchange="handleFileSelect(event)">
 
   <script>
-    // --- CONFIGURATION JSONBIN.IO ---
     const JSONBIN_BIN_ID = "6ace1c3eac6210605a2d7072"; 
     const JSONBIN_MASTER_KEY = "$2a$10$5PPv7.efMR/bixp3G0XV4uTh1oi80l3doJq08GDMSeAP/2d/nwT4i"; 
 
@@ -245,9 +241,27 @@
       document.getElementById('lock-screen').style.display = 'none';
     }
 
+    function formatImageUrl(url) {
+      if (!url) return '';
+      if (url.includes('drive.google.com') && url.includes('/file/d/')) {
+        const matches = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+        if (matches && matches[1]) {
+          return 'https://lh3.googleusercontent.com/d/' + matches[1];
+        }
+      }
+      return url;
+    }
+
+    function autoConvertDriveUrl(input) {
+      const formatted = formatImageUrl(input.value);
+      if (formatted !== input.value) {
+        input.value = formatted;
+      }
+      document.getElementById('m-avatar').src = formatted || 'https://via.placeholder.com/150/E8E5DF/58111A?text=Logo';
+    }
+
     const DEFAULT_DOMAINS = [{"id": "d1", "name": "JL Vergnon", "region": "Champagne", "x": 776, "y": 566.5}, {"id": "d2", "name": "Jérôme Blin", "region": "Champagne", "x": 916, "y": 566.5}, {"id": "d3", "name": "Maurice Choppin", "region": "Champagne", "x": 1056, "y": 566.5}, {"id": "d4", "name": "Château des Rontets", "region": "Bourgogne", "x": 1196, "y": 566.5}, {"id": "d5", "name": "Jean Collet", "region": "Bourgogne", "x": 776, "y": 631.5}, {"id": "d6", "name": "Tessier", "region": "Bourgogne", "x": 916, "y": 631.5}, {"id": "d7", "name": "Philippe Chavy", "region": "Bourgogne", "x": 1056, "y": 631.5}, {"id": "d8", "name": "Clos de la Chapelle", "region": "Bourgogne", "x": 1196, "y": 631.5}, {"id": "d9", "name": "Thierry Mortet", "region": "Bourgogne", "x": 776, "y": 696.5}, {"id": "d10", "name": "Dugat Py", "region": "Bourgogne", "x": 916, "y": 696.5}, {"id": "d11", "name": "Stefan Meyer", "region": "Allemagne", "x": 1056, "y": 696.5}];
     
-    // Charger immédiatement vos données en mémoire locale
     let state = {
       domains: JSON.parse(JSON.stringify(DEFAULT_DOMAINS)),
       importers: [],
@@ -262,8 +276,6 @@
       calculateInitialPositions();
       render();
       window.addEventListener('resize', updateConnections);
-
-      // Charger la dernière version depuis JSONBin.io à l'ouverture
       loadFromCloud();
 
       document.addEventListener('keydown', (e) => {
@@ -401,7 +413,7 @@
         card.style.left = `${imp.x}px`;
         card.style.top = `${imp.y}px`;
 
-        const avatarUrl = imp.avatar || 'https://via.placeholder.com/150/E8E5DF/58111A?text=' + encodeURIComponent(imp.company ? imp.company.charAt(0) : 'W');
+        const avatarUrl = formatImageUrl(imp.avatar) || 'https://via.placeholder.com/150/E8E5DF/58111A?text=' + encodeURIComponent(imp.company ? imp.company.charAt(0) : 'W');
 
         card.innerHTML = `
           <div class="card-actions"><button class="btn-icon" onclick="deleteImporter('${imp.id}', event)">✕</button></div>
@@ -530,7 +542,7 @@
       document.getElementById('m-company-title').innerText = imp.company || 'Entreprise';
       document.getElementById('m-contact-title').innerText = imp.name || 'Sans contact';
       
-      const avatarSrc = imp.avatar || 'https://via.placeholder.com/150/E8E5DF/58111A?text=' + encodeURIComponent(imp.company ? imp.company.charAt(0) : 'W');
+      const avatarSrc = formatImageUrl(imp.avatar) || 'https://via.placeholder.com/150/E8E5DF/58111A?text=' + encodeURIComponent(imp.company ? imp.company.charAt(0) : 'W');
       document.getElementById('m-avatar').src = avatarSrc;
       
       document.getElementById('m-input-company').value = imp.company || '';
@@ -580,7 +592,7 @@
         imp.activity = document.getElementById('m-input-activity').value;
         imp.email = document.getElementById('m-input-email').value;
         imp.phone = document.getElementById('m-input-phone').value;
-        imp.avatar = document.getElementById('m-input-avatar').value;
+        imp.avatar = formatImageUrl(document.getElementById('m-input-avatar').value);
         imp.notes = document.getElementById('m-input-notes').value;
         saveToCloud();
         render();
