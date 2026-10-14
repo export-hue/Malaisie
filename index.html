@@ -32,7 +32,6 @@
     * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
     body { background-color: var(--bg-color); font-family: var(--font-body); color: var(--text-dark); width: 100vw; height: 100vh; overflow: hidden; position: relative; }
 
-    /* Écran de connexion (Mot de passe) */
     #lock-screen {
       position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: var(--bg-color); z-index: 1000; display: flex; align-items: center; justify-content: center; flex-direction: column;
     }
@@ -57,6 +56,7 @@
     .sync-indicator { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-muted); background: rgba(0,0,0,0.04); padding: 4px 10px; border-radius: 12px; white-space: nowrap; }
     .status-dot { width: 7px; height: 7px; border-radius: 50%; background: #34C759; }
     .status-dot.syncing { background: #FF9500; }
+    .status-dot.error { background: #E74C3C; }
 
     .toolbar-actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
     .btn { background: rgba(240, 238, 233, 0.8); border: 1px solid transparent; color: var(--text-dark); padding: 7px 12px; border-radius: 18px; font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; gap: 5px; white-space: nowrap; }
@@ -71,10 +71,8 @@
     .draggable-card { position: absolute; background: var(--card-bg); backdrop-filter: blur(16px); border: 1px solid var(--card-border); border-radius: 16px; box-shadow: var(--card-shadow); cursor: grab; z-index: 10; transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease; }
     .draggable-card:hover { z-index: 45; transform: scale(1.03); box-shadow: 0 15px 35px rgba(0,0,0,0.1); }
 
-    /* Surbrillance Mode Relier */
     .draggable-card.selected-for-link { border: 3px solid var(--accent-gold) !important; box-shadow: 0 0 20px rgba(197, 160, 89, 0.5) !important; transform: scale(1.05); z-index: 50 !important; }
 
-    /* EFFET HOVER : Surbrillance des liaisons actives */
     path.connection-line.line-highlighted { stroke: var(--primary-wine) !important; stroke-width: 3.5px !important; stroke-dasharray: none !important; opacity: 1 !important; }
     .draggable-card.linked-highlighted { border: 2px solid var(--primary-wine) !important; box-shadow: 0 0 20px rgba(88, 17, 26, 0.2) !important; transform: scale(1.05); z-index: 40 !important; }
     .draggable-card.linked-highlighted .domain-name { font-weight: 800 !important; }
@@ -92,7 +90,6 @@
     .importer-card[data-color="none"] { background: var(--card-bg); border-left-color: transparent; }
 
     .importer-avatar { width: 45px; height: 45px; border-radius: 10px; object-fit: cover; background: #E8E5DF; flex-shrink: 0; }
-    
     .importer-info-container { flex-grow: 1; overflow: hidden; }
     .importer-company { font-weight: 600; font-size: 13px; line-height: 1.2; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; white-space: normal; overflow: hidden; text-overflow: ellipsis; transition: font-weight 0.2s ease; }
     .importer-subtitle { font-size: 11px; color: var(--text-muted); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -109,7 +106,6 @@
     .draggable-card:hover .card-actions { display: flex; }
     .btn-icon { width: 22px; height: 22px; border-radius: 50%; background: rgba(0,0,0,0.7); color: white; border: none; font-size: 11px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 
-    /* Modale Complète */
     .modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.4); backdrop-filter: blur(4px); z-index: 200; display: none; align-items: center; justify-content: center; }
     .modal-overlay.active { display: flex; }
     .modal-card { background: white; width: 85vw; max-width: 900px; border-radius: 24px; position: relative; max-height: 90vh; overflow-y: auto; display: flex; flex-direction: column; box-shadow: 0 20px 60px rgba(0,0,0,0.25); }
@@ -234,7 +230,6 @@
     let downX = 0, downY = 0;
     let isDraggingGlobal = false;
 
-    // Fonction de déverrouillage
     function unlockApp() {
       const pwd = document.getElementById('password-input').value;
       if (pwd === "Bouquet2026") {
@@ -245,10 +240,7 @@
       }
     }
 
-    // Curseur dans la case du mot de passe au chargement
-    window.onload = () => {
-      document.getElementById('password-input').focus();
-    };
+    window.onload = () => { document.getElementById('password-input').focus(); };
 
     async function initApp() {
       await loadData();
@@ -259,7 +251,8 @@
       updateSyncStatus('syncing', 'Chargement...');
       try {
         const res = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`, {
-          headers: { 'X-Master-Key': JSONBIN_API_KEY }
+          headers: { 'X-Master-Key': JSONBIN_API_KEY },
+          cache: 'no-store' // FORCE LE RAFRAÎCHISSEMENT DU CACHE (Vital pour ton patron)
         });
         if (res.ok) {
           const data = await res.json();
@@ -272,7 +265,7 @@
             return;
           }
         }
-      } catch (e) { console.warn("Erreur Cloud..."); }
+      } catch (e) { console.warn("Erreur réseau Cloud..."); }
       
       const localData = localStorage.getItem('bouquet_backup');
       if (localData) {
@@ -289,14 +282,19 @@
       localStorage.setItem('bouquet_backup', JSON.stringify(state));
       updateSyncStatus('syncing', 'Sauvegarde...');
       try {
-        await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`, {
+        const res = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json', 'X-Master-Key': JSONBIN_API_KEY },
           body: JSON.stringify(state)
         });
+        
+        // VRAIE VERIFICATION (Si JSONBin bloque, on affiche l'erreur rouge)
+        if (!res.ok) throw new Error("JSONBin a bloqué l'envoi");
+        
         updateSyncStatus('online', 'En direct (Cloud)');
       } catch (e) {
-        updateSyncStatus('syncing', 'Erreur (Sauvé en local)');
+        document.getElementById('sync-dot').className = 'status-dot error';
+        document.getElementById('sync-text').innerText = 'Erreur Cloud (Sauvé Local)';
       }
     }
 
@@ -327,11 +325,9 @@
         el.onclick = (e) => {
           if (e.target.closest('.btn-icon')) return;
           if (el.dataset.justDragged === "true") return; 
-          
           if (isLinkingMode) handleLinkingClick(d.id, 'domain');
         };
 
-        // Effet Hover : Lignes et Importateurs connectés en gras
         el.addEventListener('mouseenter', () => {
           if (isDraggingGlobal) return;
           state.links.forEach(l => {
@@ -395,7 +391,6 @@
           else openModal(imp.id);
         };
 
-        // Effet Hover : Lignes et Domaines connectés en gras
         el.addEventListener('mouseenter', () => {
           if (isDraggingGlobal) return;
           state.links.forEach(l => {
@@ -451,13 +446,8 @@
         if (isDragging) {
           isDragging = false;
           el.style.zIndex = 10;
-          if (el.dataset.justDragged === "true") {
-            saveToCloud();
-          }
-          setTimeout(() => { 
-            el.dataset.justDragged = "false"; 
-            isDraggingGlobal = false;
-          }, 50);
+          if (el.dataset.justDragged === "true") { saveToCloud(); }
+          setTimeout(() => { el.dataset.justDragged = "false"; isDraggingGlobal = false; }, 50);
         }
       });
     }
@@ -480,7 +470,6 @@
         const dx = (x2 - x1) / 2;
         path.setAttribute('d', `M ${x1} ${y1} C ${x1 + dx} ${y1}, ${x2 - dx} ${y2}, ${x2} ${y2}`);
         path.setAttribute('class', 'connection-line');
-        // Identification pour le survol
         path.setAttribute('data-importer', link.importerId);
         path.setAttribute('data-domain', link.domainId);
         
@@ -492,8 +481,7 @@
       isLinkingMode = !isLinkingMode;
       document.getElementById('btn-toggle-link').classList.toggle('btn-active', isLinkingMode);
       document.getElementById('linking-banner').style.display = isLinkingMode ? 'block' : 'none';
-      linkingSource = null;
-      renderWorkspace();
+      linkingSource = null; renderWorkspace();
     }
 
     function handleLinkingClick(id, type) {
@@ -508,11 +496,8 @@
         
         if (idx >= 0) state.links.splice(idx, 1); else state.links.push({ importerId, domainId });
         
-        linkingSource = null;
-        renderWorkspace(); saveToCloud();
-      } else {
-        linkingSource = { id, type }; renderWorkspace();
-      }
+        linkingSource = null; renderWorkspace(); saveToCloud();
+      } else { linkingSource = { id, type }; renderWorkspace(); }
     }
 
     function openModal(id) {
