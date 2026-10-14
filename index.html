@@ -33,16 +33,13 @@
     body { background-color: var(--bg-color); font-family: var(--font-body); color: var(--text-dark); width: 100vw; height: 100vh; overflow: hidden; position: relative; }
 
     #lock-screen {
-      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-      background: var(--bg-color); z-index: 1000; display: flex; align-items: center; justify-content: center; flex-direction: column;
+      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: var(--bg-color); z-index: 1000; display: flex; align-items: center; justify-content: center; flex-direction: column;
     }
     .lock-box {
       background: white; padding: 40px; border-radius: 24px; box-shadow: 0 20px 50px rgba(0,0,0,0.08); text-align: center; max-width: 360px; width: 90%; border: 1px solid var(--card-border);
     }
     .lock-box h2 { font-family: var(--font-title); color: var(--primary-wine); margin-bottom: 24px; font-size: 22px; }
-    .lock-btn {
-      width: 100%; padding: 12px; background: var(--primary-wine); color: white; border: none; border-radius: 12px; font-weight: 600; cursor: pointer; transition: background 0.2s;
-    }
+    .lock-btn { width: 100%; padding: 12px; background: var(--primary-wine); color: white; border: none; border-radius: 12px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
 
     header {
       position: absolute; top: 16px; left: 50%; transform: translateX(-50%); z-index: 100; display: flex; align-items: center; gap: 16px; padding: 10px 22px;
@@ -68,14 +65,10 @@
     path.connection-line { fill: none; stroke: var(--accent-gold); stroke-width: 2px; stroke-dasharray: 6 4; opacity: 0.45; }
 
     .draggable-card { position: absolute; background: var(--card-bg); backdrop-filter: blur(16px); border: 1px solid var(--card-border); border-radius: 16px; box-shadow: var(--card-shadow); cursor: grab; z-index: 10; transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease; }
-
-    /* Zoom de la carte au survol */
     .draggable-card:hover { z-index: 45; transform: scale(1.03); box-shadow: 0 15px 35px rgba(0,0,0,0.1); }
 
-    /* Surbrillance Mode Relier */
-    .draggable-card.selected-for-link {
-      border: 3px solid var(--accent-gold) !important; box-shadow: 0 0 20px rgba(197, 160, 89, 0.5) !important; transform: scale(1.05); z-index: 50 !important;
-    }
+    /* Surbrillance dorée Mode Relier */
+    .draggable-card.selected-for-link { border: 3px solid var(--accent-gold) !important; box-shadow: 0 0 20px rgba(197, 160, 89, 0.5) !important; transform: scale(1.05); z-index: 50 !important; }
 
     .domain-card { padding: 8px 12px; min-width: 135px; max-width: 165px; text-align: center; border-top: 3px solid var(--primary-wine); border-radius: 14px; }
     .domain-region { font-size: 8px; font-weight: 600; text-transform: uppercase; color: var(--accent-gold); margin-bottom: 2px; }
@@ -89,19 +82,31 @@
     .importer-card[data-color="none"] { background: var(--card-bg); border-left-color: transparent; }
 
     .importer-avatar { width: 45px; height: 45px; border-radius: 10px; object-fit: cover; background: #E8E5DF; flex-shrink: 0; }
-    .importer-company { font-weight: 600; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .importer-contact { font-size: 11px; color: var(--text-muted); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    
+    .importer-info-container { flex-grow: 1; overflow: hidden; }
+    
+    /* Nom de l'entreprise sur 2 lignes max */
+    .importer-company { 
+      font-weight: 600; font-size: 13px; line-height: 1.2;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+      white-space: normal; overflow: hidden; text-overflow: ellipsis; 
+    }
+    
+    /* Activité seule (en une seule ligne) */
+    .importer-subtitle { font-size: 11px; color: var(--text-muted); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-    /* Mini-bulle d'info au survol (Délai d'apparition : 0.6s) */
+    /* Bulle d'Aperçu (Notes et Domaines) avec alignement texte à gauche */
     .mini-tooltip {
       position: absolute; top: calc(100% + 8px); left: 50%; transform: translateX(-50%);
       background: rgba(255,255,255,0.98); border: 1px solid var(--card-border); border-radius: 12px;
-      padding: 10px 14px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 200px;
-      opacity: 0; visibility: hidden; pointer-events: none; transition: opacity 0.3s ease 0.6s; z-index: 100;
+      padding: 12px 14px; box-shadow: 0 10px 30px rgba(0,0,0,0.12); width: 240px;
+      opacity: 0; visibility: hidden; pointer-events: none; transition: opacity 0.2s ease 0.4s; z-index: 100;
+      text-align: left;
     }
     .importer-card:hover .mini-tooltip { opacity: 1; visibility: visible; }
-    .tooltip-title { font-size: 10px; color: var(--accent-gold); font-weight: 700; margin-bottom: 4px; text-transform: uppercase; }
-    .tooltip-text { font-size: 11px; color: var(--text-dark); margin-bottom: 2px; }
+    .tooltip-title { font-size: 9px; color: var(--accent-gold); font-weight: 700; margin-bottom: 3px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .tooltip-text { font-size: 11px; color: var(--text-dark); margin-bottom: 8px; line-height: 1.3; }
+    .tooltip-text:last-child { margin-bottom: 0; }
 
     .card-actions { position: absolute; top: -8px; right: -8px; display: none; gap: 4px; z-index: 15; }
     .draggable-card:hover .card-actions { display: flex; }
@@ -110,7 +115,6 @@
     /* Modale Complète */
     .modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.4); backdrop-filter: blur(4px); z-index: 200; display: none; align-items: center; justify-content: center; }
     .modal-overlay.active { display: flex; }
-    
     .modal-card { background: white; width: 85vw; max-width: 900px; border-radius: 24px; position: relative; max-height: 90vh; overflow-y: auto; display: flex; flex-direction: column; box-shadow: 0 20px 60px rgba(0,0,0,0.25); }
 
     .modal-header-banner { width: 100%; padding: 20px 28px; background: #F8F7F4; border-bottom: 1px solid var(--card-border); display: flex; align-items: center; gap: 20px; border-top-left-radius: 24px; border-top-right-radius: 24px; }
@@ -178,7 +182,6 @@
 
   <div id="linking-banner">Mode Relier Actif : Cliquez sur un élément puis sur un autre pour les relier/délier</div>
 
-  <!-- Fiche Modale Complete (S'ouvre au CLIC uniquement) -->
   <div class="modal-overlay" id="info-modal">
     <div class="modal-card">
       <button class="modal-close" onclick="closeModal()">✕</button>
@@ -205,7 +208,7 @@
             <input type="hidden" id="m-input-color" value="none">
           </div>
 
-          <div class="info-row"><label>Lien Photo / Logo (Direct Drive / ImgBB)</label><input type="text" id="m-input-avatar" class="modal-field-edit" placeholder="https://lh3.googleusercontent.com/d/..." onchange="saveModalChanges()"></div>
+          <div class="info-row"><label>Lien Photo / Logo</label><input type="text" id="m-input-avatar" class="modal-field-edit" placeholder="https://lh3.googleusercontent.com/d/..." onchange="saveModalChanges()"></div>
           <div class="info-row"><label>Entreprise</label><input type="text" id="m-input-company" class="modal-field-edit" onchange="saveModalChanges()"></div>
           <div class="info-row"><label>Contact (Nom)</label><input type="text" id="m-input-contact" class="modal-field-edit" onchange="saveModalChanges()"></div>
           <div class="info-row"><label>Activité</label><input type="text" id="m-input-activity" class="modal-field-edit" onchange="saveModalChanges()"></div>
@@ -234,7 +237,9 @@
     let activeModalId = null;
     let linkingSource = null; 
     let isLinkingMode = false;
-    let isDraggingGlobal = false;
+
+    // Variables pour détecter précisément si c'est un Clic ou un Déplacement
+    let downX = 0, downY = 0;
 
     function unlockApp() {
       document.getElementById('lock-screen').style.display = 'none';
@@ -246,7 +251,6 @@
       window.addEventListener('resize', renderConnections);
     }
 
-    // Chargement : Cloud d'abord, puis Secours Local
     async function loadData() {
       updateSyncStatus('syncing', 'Chargement...');
       try {
@@ -257,31 +261,29 @@
           const data = await res.json();
           if (data.record && (data.record.domains || data.record.importers)) {
             state = data.record;
-            saveToLocalBackup(); // Mise à jour de la sécurité locale
+            // Sécurité : S'assurer que le tableau des liens existe bien
+            state.links = state.links || [];
+            localStorage.setItem('bouquet_backup', JSON.stringify(state));
             renderWorkspace();
             updateSyncStatus('online', 'En direct (Cloud)');
             return;
           }
         }
-      } catch (e) { console.warn("Erreur Cloud, tentative locale..."); }
+      } catch (e) { console.warn("Erreur Cloud..."); }
       
-      // Sécurité si le Cloud échoue (évite de devoir réimporter)
       const localData = localStorage.getItem('bouquet_backup');
       if (localData) {
         state = JSON.parse(localData);
-        updateSyncStatus('online', 'Sauvegarde Locale (Secours)');
+        state.links = state.links || [];
+        updateSyncStatus('online', 'Secours Local');
       } else {
         updateSyncStatus('online', 'Nouvelle Carte');
       }
       renderWorkspace();
     }
 
-    function saveToLocalBackup() {
-      localStorage.setItem('bouquet_backup', JSON.stringify(state));
-    }
-
     async function saveToCloud() {
-      saveToLocalBackup(); // Toujours sauver en local en même temps
+      localStorage.setItem('bouquet_backup', JSON.stringify(state));
       updateSyncStatus('syncing', 'Sauvegarde...');
       try {
         await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`, {
@@ -291,7 +293,7 @@
         });
         updateSyncStatus('online', 'En direct (Cloud)');
       } catch (e) {
-        updateSyncStatus('syncing', 'Erreur Cloud (Sauvé en local)');
+        updateSyncStatus('syncing', 'Erreur (Sauvé en local)');
       }
     }
 
@@ -320,7 +322,11 @@
         `;
 
         el.onclick = (e) => {
-          if (!isDraggingGlobal && isLinkingMode) handleLinkingClick(d.id, 'domain');
+          if (e.target.closest('.btn-icon')) return;
+          // Vérification stricte du clic (non déplacement)
+          if (Math.abs(e.clientX - downX) + Math.abs(e.clientY - downY) > 5) return;
+          
+          if (isLinkingMode) handleLinkingClick(d.id, 'domain');
         };
 
         makeDraggable(el, d);
@@ -339,30 +345,33 @@
 
         const avatarUrl = imp.avatar || 'https://via.placeholder.com/50?text=Logo';
         
-        // Structure de la carte avec la mini-bulle ajoutée
+        // Création du texte d'aperçu de la bulle (Limité à 60 caractères pour rester propre)
+        const notesPreview = imp.notes ? (imp.notes.length > 60 ? imp.notes.substring(0,60)+'...' : imp.notes) : '-';
+        const domainsPreview = imp.domainsText ? (imp.domainsText.length > 60 ? imp.domainsText.substring(0,60)+'...' : imp.domainsText) : '-';
+
         el.innerHTML = `
           <img src="${avatarUrl}" class="importer-avatar" onerror="this.src='https://via.placeholder.com/50?text=Logo'">
-          <div>
+          <div class="importer-info-container">
             <div class="importer-company">${imp.company || 'Sans nom'}</div>
-            <div class="importer-contact">${imp.contact || ''}</div>
+            <div class="importer-subtitle">${imp.activity || ''}</div>
           </div>
           <div class="mini-tooltip">
-            <div class="tooltip-title">Aperçu Express</div>
-            <div class="tooltip-text">📞 ${imp.phone || 'Non renseigné'}</div>
-            <div class="tooltip-text">✉️ ${imp.email || 'Non renseigné'}</div>
-            <div class="tooltip-text" style="color:var(--text-muted); font-size:10px; margin-top:4px;">(Cliquez pour ouvrir la fiche)</div>
+            <div class="tooltip-title">📝 Remarques / Notes</div>
+            <div class="tooltip-text">${notesPreview}</div>
+            <div class="tooltip-title">🍷 Domaines associés</div>
+            <div class="tooltip-text">${domainsPreview}</div>
+            <div class="tooltip-text" style="color:var(--text-muted); font-size:10px; margin-top:8px;">(Cliquez pour ouvrir la fiche)</div>
           </div>
           <div class="card-actions"><button class="btn-icon" onclick="deleteItem('importer', '${imp.id}', event)">✕</button></div>
         `;
 
-        // Gestion du clic (Edition vs Mode Relier)
         el.onclick = (e) => {
-          if (isDraggingGlobal) return; // Empêche l'ouverture si on vient de relâcher un déplacement
-          if (isLinkingMode) {
-            handleLinkingClick(imp.id, 'importer');
-          } else {
-            openModal(imp.id);
-          }
+          if (e.target.closest('.btn-icon')) return;
+          // Vérification stricte du clic : si la souris a bougé de + de 5 pixels, c'était un glissement
+          if (Math.abs(e.clientX - downX) + Math.abs(e.clientY - downY) > 5) return;
+
+          if (isLinkingMode) handleLinkingClick(imp.id, 'importer');
+          else openModal(imp.id);
         };
 
         makeDraggable(el, imp);
@@ -373,30 +382,37 @@
     }
 
     function makeDraggable(el, item) {
-      let isDragging = false, startX, startY, hasMoved = false;
+      let isDragging = false, startX, startY;
       el.addEventListener('mousedown', e => {
         if (e.target.closest('.btn-icon')) return;
-        isDragging = true; hasMoved = false;
-        startX = e.clientX - item.x; startY = e.clientY - item.y;
+        isDragging = true;
+        
+        // Enregistre la position exacte du début du clic
+        downX = e.clientX; 
+        downY = e.clientY;
+        
+        startX = e.clientX - item.x; 
+        startY = e.clientY - item.y;
         el.style.zIndex = 100;
       });
 
       window.addEventListener('mousemove', e => {
         if (!isDragging) return;
-        hasMoved = true;
-        isDraggingGlobal = true;
-        item.x = e.clientX - startX; item.y = e.clientY - startY;
-        el.style.left = `${item.x}px`; el.style.top = `${item.y}px`;
+        item.x = e.clientX - startX; 
+        item.y = e.clientY - startY;
+        el.style.left = `${item.x}px`; 
+        el.style.top = `${item.y}px`;
         renderConnections();
       });
 
-      window.addEventListener('mouseup', () => {
+      window.addEventListener('mouseup', e => {
         if (isDragging) {
           isDragging = false;
           el.style.zIndex = 10;
-          if (hasMoved) saveToCloud();
-          // Réinitialise l'état global après un court délai pour éviter de déclencher un clic
-          setTimeout(() => { isDraggingGlobal = false; }, 50);
+          // Ne sauvegarde le nuage que si l'élément a été déplacé
+          if (Math.abs(e.clientX - downX) + Math.abs(e.clientY - downY) > 5) {
+            saveToCloud();
+          }
         }
       });
     }
@@ -404,6 +420,7 @@
     function renderConnections() {
       const svg = document.getElementById('connections-layer');
       svg.innerHTML = '';
+      state.links = state.links || [];
 
       state.links.forEach(link => {
         const impEl = document.getElementById(`card-${link.importerId}`);
@@ -422,7 +439,7 @@
       });
     }
 
-    // MODE RELIER CORRIGÉ
+    // MODE RELIER CORRIGÉ 100% SÉCURISÉ
     function toggleLinkingMode() {
       isLinkingMode = !isLinkingMode;
       document.getElementById('btn-toggle-link').classList.toggle('btn-active', isLinkingMode);
@@ -437,16 +454,20 @@
         renderWorkspace(); 
         return;
       }
+      
       if (linkingSource.id === id) {
         linkingSource = null;
         renderWorkspace();
         return;
       }
+      
       if (linkingSource.type !== type) {
         const importerId = type === 'importer' ? id : linkingSource.id;
         const domainId = type === 'domain' ? id : linkingSource.id;
 
+        state.links = state.links || [];
         const idx = state.links.findIndex(l => l.importerId === importerId && l.domainId === domainId);
+        
         if (idx >= 0) state.links.splice(idx, 1); 
         else state.links.push({ importerId, domainId });
         
@@ -465,7 +486,7 @@
       activeModalId = id;
 
       document.getElementById('m-company-title').innerText = imp.company || 'Nouvel Importateur';
-      document.getElementById('m-contact-title').innerText = imp.contact ? `Contact : ${imp.contact}` : 'Aucun contact saisi';
+      document.getElementById('m-contact-title').innerText = imp.activity || 'Aucune activité';
       document.getElementById('m-avatar').src = imp.avatar || 'https://via.placeholder.com/65?text=Logo';
       document.getElementById('m-input-company').value = imp.company || '';
       document.getElementById('m-input-contact').value = imp.contact || '';
@@ -481,94 +502,4 @@
     }
 
     function selectColor(colorName, doSave = true) {
-      document.getElementById('m-input-color').value = colorName;
-      document.querySelectorAll('.color-option').forEach(el => {
-        el.classList.toggle('selected', el.getAttribute('data-color') === colorName);
-      });
-      if (doSave) saveModalChanges();
-    }
-
-    function closeModal() {
-      document.getElementById('info-modal').classList.remove('active');
-      activeModalId = null;
-    }
-
-    function saveModalChanges() {
-      if (!activeModalId) return;
-      const imp = state.importers.find(i => i.id === activeModalId);
-      if (imp) {
-        imp.company = document.getElementById('m-input-company').value;
-        imp.contact = document.getElementById('m-input-contact').value;
-        imp.activity = document.getElementById('m-input-activity').value;
-        imp.email = document.getElementById('m-input-email').value;
-        imp.phone = document.getElementById('m-input-phone').value;
-        imp.avatar = document.getElementById('m-input-avatar').value;
-        imp.notes = document.getElementById('m-input-notes').value;
-        imp.domainsText = document.getElementById('m-input-domains').value;
-        imp.color = document.getElementById('m-input-color').value;
-
-        renderWorkspace();
-        saveToCloud();
-        
-        document.getElementById('m-company-title').innerText = imp.company || 'Nouvel Importateur';
-        document.getElementById('m-contact-title').innerText = imp.contact ? `Contact : ${imp.contact}` : 'Aucun contact saisi';
-        document.getElementById('m-avatar').src = imp.avatar || 'https://via.placeholder.com/65?text=Logo';
-      }
-    }
-
-    function autoLayout() {
-      const w = window.innerWidth; const h = window.innerHeight;
-      state.domains.forEach((d, idx) => { d.x = w - 200 - (Math.floor(idx / 8) * 160); d.y = 100 + ((idx % 8) * 65); });
-      state.importers.forEach((imp, idx) => {
-        if (idx < 6) { imp.x = 80 + (idx * 230); imp.y = 90; } 
-        else if (idx < 12) { imp.x = 80; imp.y = 160 + ((idx - 6) * 75); } 
-        else { imp.x = 80 + ((idx - 12) * 230); imp.y = h - 120; }
-      });
-      renderWorkspace(); saveToCloud();
-    }
-
-    function deleteItem(type, id, event) {
-      event.stopPropagation(); // Empêche l'ouverture de la modale en supprimant
-      if (type === 'domain') {
-        state.domains = state.domains.filter(d => d.id !== id); state.links = state.links.filter(l => l.domainId !== id);
-      } else {
-        state.importers = state.importers.filter(i => i.id !== id); state.links = state.links.filter(l => l.importerId !== id);
-      }
-      if (linkingSource && linkingSource.id === id) linkingSource = null;
-      renderWorkspace(); saveToCloud();
-    }
-
-    function openAddModal(type) {
-      const name = prompt(`Nom du nouveau ${type === 'domain' ? 'Domaine' : 'Importateur'} :`);
-      if (!name) return;
-      const id = 'id-' + Date.now();
-      if (type === 'domain') state.domains.push({ id, name, region: 'Bourgogne', x: 200, y: 200 });
-      else state.importers.push({ id, company: name, contact: '', avatar: '', color: 'none', x: 150, y: 150 });
-      renderWorkspace(); saveToCloud();
-    }
-
-    function exportData() {
-      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state, null, 2));
-      const a = document.createElement('a'); a.href = dataStr; a.download = "malaisie_2026_backup.json"; a.click();
-    }
-
-    function triggerJSONImport() { document.getElementById('file-input').click(); }
-
-    function handleFileSelect(e) {
-      const file = e.target.files[0]; if (!file) return;
-      const reader = new FileReader();
-      reader.onload = function(evt) {
-        try {
-          const parsed = JSON.parse(evt.target.result);
-          if (parsed.domains || parsed.importers) {
-            state = parsed; renderWorkspace(); saveToCloud();
-          }
-        } catch(err) { alert("Format de fichier non reconnu."); }
-      };
-      reader.readAsText(file);
-    }
-
-    window.onload = unlockApp;
-  </script>
-</body>
-</html>
+      document.
