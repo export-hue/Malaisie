@@ -110,7 +110,10 @@
     .modal-overlay.active { display: flex; }
     .modal-card { background: white; width: 85vw; max-width: 900px; border-radius: 24px; position: relative; max-height: 90vh; overflow-y: auto; display: flex; flex-direction: column; box-shadow: 0 20px 60px rgba(0,0,0,0.25); }
     .modal-header-banner { width: 100%; padding: 20px 28px; background: #F8F7F4; border-bottom: 1px solid var(--card-border); display: flex; align-items: center; gap: 20px; border-top-left-radius: 24px; border-top-right-radius: 24px; }
-    .modal-banner-avatar { width: 65px; height: 65px; border-radius: 14px; object-fit: cover; border: 2px solid var(--accent-gold); flex-shrink: 0; background: white; }
+    
+    .modal-banner-avatar { width: 65px; height: 65px; border-radius: 14px; object-fit: cover; border: 2px solid var(--accent-gold); flex-shrink: 0; background: white; cursor: zoom-in; transition: transform 0.2s ease; }
+    .modal-banner-avatar:hover { transform: scale(1.05); }
+
     .modal-banner-info { flex-grow: 1; }
     .modal-banner-info h2 { font-family: var(--font-title); color: var(--primary-wine); font-size: 22px; font-weight: 700; }
     .modal-banner-info p { color: var(--text-muted); font-size: 13px; margin-top: 2px; }
@@ -129,6 +132,11 @@
     .modal-field-edit { width: 100%; font-size: 13px; background: #F8F7F4; padding: 8px 12px; border-radius: 10px; border: 1px solid rgba(0,0,0,0.08); font-family: inherit; outline: none; }
     .modal-field-edit:focus { border-color: var(--accent-gold); background: white; }
     .modal-close { position: absolute; top: 16px; right: 20px; background: rgba(0,0,0,0.06); border: none; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; font-size: 14px; z-index: 10; }
+    
+    .lightbox-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(8px); z-index: 300; display: none; align-items: center; justify-content: center; cursor: zoom-out; opacity: 0; transition: opacity 0.25s ease; }
+    .lightbox-overlay.active { display: flex; opacity: 1; }
+    .lightbox-img { width: min(85vw, 650px); height: min(85vh, 650px); object-fit: contain; border-radius: 16px; box-shadow: 0 20px 60px rgba(0,0,0,0.5); border: 2px solid var(--accent-gold); background: #111; }
+
     #linking-banner { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--accent-gold); color: white; padding: 10px 24px; border-radius: 20px; font-size: 13px; z-index: 90; display: none; }
     #file-input { display: none; }
   </style>
@@ -160,7 +168,6 @@
       <button class="btn" onclick="openAddModal('domain')"><span>+</span> Domaine</button>
       <button class="btn" onclick="openAddModal('importer')"><span>+</span> Importateur</button>
       <button class="btn" id="btn-toggle-link" onclick="toggleLinkingMode()">🔗 Mode Relier</button>
-      <button class="btn" onclick="autoLayout()">✨ Re-disposer</button>
       <button class="btn" onclick="exportData()">💾 Exporter JSON</button>
       <button class="btn" onclick="triggerJSONImport()">📂 Importer JSON</button>
     </div>
@@ -177,7 +184,7 @@
       <button class="modal-close" onclick="closeModal()">✕</button>
       
       <div class="modal-header-banner">
-        <img src="" id="m-avatar" class="modal-banner-avatar" alt="Logo">
+        <img src="" id="m-avatar" class="modal-banner-avatar" alt="Logo" title="Cliquer pour agrandir" onclick="openLightbox()">
         <div class="modal-banner-info">
           <h2 id="m-company-title">Entreprise</h2>
           <p id="m-contact-title">Activité</p>
@@ -217,6 +224,10 @@
     </div>
   </div>
 
+  <div class="lightbox-overlay" id="lightbox" onclick="closeLightbox()">
+    <img src="" id="lightbox-img" class="lightbox-img" alt="Photo agrandie">
+  </div>
+
   <input type="file" id="file-input" onchange="handleFileSelect(event)">
 
   <script>
@@ -233,6 +244,7 @@
     function unlockApp() {
       const pwd = document.getElementById('password-input').value;
       if (pwd === "Bouquet2026") {
+        localStorage.setItem('bouquet_auth_2026', 'true');
         document.getElementById('lock-screen').style.display = 'none';
         initApp();
       } else {
@@ -240,7 +252,14 @@
       }
     }
 
-    window.onload = () => { document.getElementById('password-input').focus(); };
+    window.onload = () => { 
+      if (localStorage.getItem('bouquet_auth_2026') === 'true') {
+        document.getElementById('lock-screen').style.display = 'none';
+        initApp();
+      } else {
+        document.getElementById('password-input').focus(); 
+      }
+    };
 
     async function initApp() {
       await loadData();
@@ -549,15 +568,16 @@
       }
     }
 
-    function autoLayout() {
-      const w = window.innerWidth; const h = window.innerHeight;
-      state.domains.forEach((d, idx) => { d.x = w - 200 - (Math.floor(idx / 8) * 160); d.y = 100 + ((idx % 8) * 65); });
-      state.importers.forEach((imp, idx) => {
-        if (idx < 6) { imp.x = 80 + (idx * 230); imp.y = 90; } 
-        else if (idx < 12) { imp.x = 80; imp.y = 160 + ((idx - 6) * 75); } 
-        else { imp.x = 80 + ((idx - 12) * 230); imp.y = h - 120; }
-      });
-      renderWorkspace(); saveToCloud();
+    function openLightbox() {
+      const src = document.getElementById('m-avatar').src;
+      if (src) {
+        document.getElementById('lightbox-img').src = src;
+        document.getElementById('lightbox').classList.add('active');
+      }
+    }
+    
+    function closeLightbox() {
+      document.getElementById('lightbox').classList.remove('active');
     }
 
     function deleteItem(type, id, event) {
