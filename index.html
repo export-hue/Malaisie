@@ -22,7 +22,6 @@
       --font-title: 'Playfair Display', Georgia, serif;
       --font-body: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
 
-      /* Couleurs Pastels */
       --pastel-green: #E2F0D9;
       --pastel-orange: #FCE4D6;
       --pastel-red: #FADBD8;
@@ -55,8 +54,6 @@
       color: white; border: none; border-radius: 12px; font-weight: 600;
       cursor: pointer; transition: background 0.2s;
     }
-    .lock-btn:hover { background: #420b13; }
-    #lock-error { color: #c0392b; font-size: 12px; margin-top: 12px; display: none; }
 
     header {
       position: absolute; top: 16px; left: 50%; transform: translateX(-50%); z-index: 100;
@@ -83,17 +80,21 @@
     #workspace { width: 100vw; height: 100vh; position: relative; overflow: hidden; }
     svg#connections-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 5; }
     path.connection-line { fill: none; stroke: var(--accent-gold); stroke-width: 2px; stroke-dasharray: 6 4; opacity: 0.45; transition: opacity 0.3s ease; }
-    path.connection-line.highlighted { stroke: var(--primary-wine) !important; stroke-width: 3.5px !important; stroke-dasharray: none !important; opacity: 1 !important; }
 
-    .draggable-card { position: absolute; background: var(--card-bg); backdrop-filter: blur(16px); border: 1px solid var(--card-border); border-radius: 16px; box-shadow: var(--card-shadow); cursor: grab; z-index: 10; transition: border-color 0.2s ease, box-shadow 0.2s ease; }
-    .draggable-card.dimmed { opacity: 0.2; }
+    .draggable-card { position: absolute; background: var(--card-bg); backdrop-filter: blur(16px); border: 1px solid var(--card-border); border-radius: 16px; box-shadow: var(--card-shadow); cursor: grab; z-index: 10; transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease; }
+
+    /* Style de sélection en mode relier (bordure grasse dorée) */
+    .draggable-card.selected-for-link {
+      border: 3px solid var(--accent-gold) !important;
+      box-shadow: 0 0 18px rgba(197, 160, 89, 0.6) !important;
+      transform: scale(1.05);
+      z-index: 50 !important;
+    }
 
     .domain-card { padding: 8px 12px; min-width: 135px; max-width: 165px; text-align: center; border-top: 3px solid var(--primary-wine); border-radius: 14px; }
-    .domain-card.highlighted { border-color: var(--accent-gold); box-shadow: 0 0 20px rgba(197, 160, 89, 0.35); transform: scale(1.05); z-index: 40 !important; }
     .domain-region { font-size: 8px; font-weight: 600; text-transform: uppercase; color: var(--accent-gold); margin-bottom: 2px; }
     .domain-name { font-family: var(--font-title); font-size: 13px; font-weight: 600; color: var(--primary-wine); }
 
-    /* Cartes Importateurs avec support des couleurs pastels */
     .importer-card { padding: 10px 14px; width: 220px; display: flex; align-items: center; gap: 12px; border-radius: 16px; border-left: 5px solid transparent; }
     .importer-card[data-color="green"] { background: var(--pastel-green); border-left-color: #2e7d32; }
     .importer-card[data-color="orange"] { background: var(--pastel-orange); border-left-color: #e65100; }
@@ -101,7 +102,6 @@
     .importer-card[data-color="blue"] { background: var(--pastel-blue); border-left-color: #1565c0; }
     .importer-card[data-color="none"] { background: var(--card-bg); border-left-color: transparent; }
 
-    .importer-card.highlighted { border-color: var(--primary-wine); box-shadow: 0 0 25px rgba(88, 17, 26, 0.22); transform: scale(1.04); z-index: 45 !important; }
     .importer-avatar { width: 50px; height: 50px; border-radius: 12px; object-fit: cover; background: #E8E5DF; flex-shrink: 0; }
     .importer-company { font-weight: 600; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .importer-contact { font-size: 11px; color: var(--text-muted); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -110,35 +110,31 @@
     .draggable-card:hover .card-actions { display: flex; }
     .btn-icon { width: 22px; height: 22px; border-radius: 50%; background: rgba(0,0,0,0.7); color: white; border: none; font-size: 11px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 
-    #cave-center-zone { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 60%; height: 55%; border: 2px dashed rgba(197, 160, 89, 0.25); border-radius: 32px; pointer-events: none; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-    .cave-header-title { font-family: var(--font-title); font-size: 28px; color: rgba(88, 17, 26, 0.18); font-weight: 700; letter-spacing: 2px; }
-
-    /* Modale Réinventée Pleine Largeur d'En-tête */
-    .modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.4); backdrop-filter: blur(8px); z-index: 200; display: none; align-items: center; justify-content: center; }
+    /* Modale Restructurée */
+    .modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.3); backdrop-filter: blur(6px); z-index: 200; display: none; align-items: center; justify-content: center; pointer-events: none; }
     .modal-overlay.active { display: flex; }
     
     .modal-card { 
       background: white; width: 85vw; max-width: 900px; border-radius: 24px; 
       position: relative; max-height: 90vh; overflow-y: auto; display: flex; flex-direction: column;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.2); pointer-events: auto;
     }
 
     .modal-header-banner {
-      width: 100%; padding: 24px 30px; background: #F8F7F4; border-bottom: 1px solid var(--card-border);
+      width: 100%; padding: 20px 28px; background: #F8F7F4; border-bottom: 1px solid var(--card-border);
       display: flex; align-items: center; gap: 20px; border-top-left-radius: 24px; border-top-right-radius: 24px;
     }
 
     .modal-banner-avatar { 
-      width: 70px; height: 70px; border-radius: 14px; object-fit: cover; border: 2px solid var(--accent-gold); 
-      cursor: zoom-in; flex-shrink: 0; background: white;
+      width: 65px; height: 65px; border-radius: 14px; object-fit: cover; border: 2px solid var(--accent-gold); 
+      flex-shrink: 0; background: white;
     }
 
     .modal-banner-info { flex-grow: 1; }
-    .modal-banner-info h2 { font-family: var(--font-title); color: var(--primary-wine); font-size: 24px; font-weight: 700; }
-    .modal-banner-info p { color: var(--text-muted); font-size: 14px; margin-top: 2px; }
+    .modal-banner-info h2 { font-family: var(--font-title); color: var(--primary-wine); font-size: 22px; font-weight: 700; }
+    .modal-banner-info p { color: var(--text-muted); font-size: 13px; margin-top: 2px; }
 
-    .modal-body-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding: 24px 30px; }
-    @media (max-width: 768px) { .modal-body-layout { grid-template-columns: 1fr; } }
+    .modal-body-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding: 20px 28px; }
 
     .color-picker-group { display: flex; gap: 10px; margin-top: 6px; }
     .color-option { width: 28px; height: 28px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: transform 0.15s; }
@@ -150,17 +146,11 @@
     .color-option[data-color="blue"] { background: var(--pastel-blue); }
     .color-option[data-color="none"] { background: #E0E0E0; }
 
-    .info-row { margin-bottom: 12px; }
+    .info-row { margin-bottom: 10px; }
     .info-row label { display: block; font-size: 10px; text-transform: uppercase; color: var(--accent-gold); font-weight: 600; margin-bottom: 4px; }
-    .modal-field-edit { width: 100%; font-size: 13px; background: #F8F7F4; padding: 10px 14px; border-radius: 10px; border: 1px solid rgba(0,0,0,0.08); font-family: inherit; outline: none; }
-    .modal-field-edit:focus { border-color: var(--accent-gold); background: white; }
+    .modal-field-edit { width: 100%; font-size: 13px; background: #F8F7F4; padding: 8px 12px; border-radius: 10px; border: 1px solid rgba(0,0,0,0.08); font-family: inherit; outline: none; }
 
-    .modal-close { position: absolute; top: 18px; right: 20px; background: rgba(0,0,0,0.06); border: none; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; font-size: 14px; z-index: 10; }
-    .modal-close:hover { background: rgba(0,0,0,0.12); }
-
-    .lightbox-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.88); backdrop-filter: blur(12px); z-index: 300; display: none; align-items: center; justify-content: center; cursor: zoom-out; opacity: 0; transition: opacity 0.25s ease; }
-    .lightbox-overlay.active { display: flex; opacity: 1; }
-    .lightbox-img { width: min(85vw, 650px); height: min(85vh, 650px); object-fit: contain; border-radius: 20px; box-shadow: 0 25px 60px rgba(0,0,0,0.6); border: 2px solid var(--accent-gold); background: #111; }
+    .modal-close { position: absolute; top: 16px; right: 20px; background: rgba(0,0,0,0.06); border: none; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; font-size: 14px; z-index: 10; }
 
     #linking-banner { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--accent-gold); color: white; padding: 10px 24px; border-radius: 20px; font-size: 13px; z-index: 90; display: none; }
     #file-input { display: none; }
@@ -174,7 +164,6 @@
       <p>Accès restreint à la Carte Malaisie 2026</p>
       <input type="password" id="password-input" class="lock-input" placeholder="Mot de passe" onkeydown="if(event.key==='Enter') unlockApp()">
       <button class="lock-btn" onclick="unlockApp()">Accéder</button>
-      <div id="lock-error">Mot de passe incorrect</div>
     </div>
   </div>
 
@@ -194,47 +183,32 @@
       <button class="btn" onclick="openAddModal('importer')"><span>+</span> Importateur</button>
       <button class="btn" id="btn-toggle-link" onclick="toggleLinkingMode()">🔗 Mode Relier</button>
       <button class="btn" onclick="autoLayout()">✨ Re-disposer</button>
-      <button class="btn" onclick="triggerExcelImport()">📥 Importer Excel/CSV</button>
-      <button class="btn btn-primary" onclick="exportData()">💾 Exporter JSON</button>
+      <button class="btn" onclick="exportData()">💾 Exporter JSON</button>
       <button class="btn" onclick="triggerJSONImport()">📂 Importer JSON</button>
       <button class="btn" style="color: #c0392b;" onclick="resetAllData()">🗑️ RàZ</button>
     </div>
   </header>
 
   <div id="workspace">
-    <div id="cave-center-zone">
-      <div class="cave-header-title">LA CAVE • MALAISIE</div>
-    </div>
     <svg id="connections-layer"></svg>
   </div>
 
-  <div id="linking-banner">Mode Relier : Cliquez sur un domaine pour créer/supprimer la liaison</div>
+  <div id="linking-banner">Mode Relier : Cliquez sur un élément puis sur un autre pour créer ou supprimer la liaison</div>
 
-  <!-- Fiche Modale Restructurée -->
-  <div class="modal-overlay" id="info-modal">
+  <!-- Fiche Modale -->
+  <div class="modal-overlay" id="info-modal" onmouseleave="closeModal()">
     <div class="modal-card">
       <button class="modal-close" onclick="closeModal()">✕</button>
       
-      <!-- Bannière En-tête Pleine Largeur -->
       <div class="modal-header-banner">
-        <img src="" id="m-avatar" class="modal-banner-avatar" alt="Logo" title="Cliquer pour agrandir" onclick="openLightbox()">
+        <img src="" id="m-avatar" class="modal-banner-avatar" alt="Logo">
         <div class="modal-banner-info">
           <h2 id="m-company-title">Entreprise</h2>
           <p id="m-contact-title">Contact</p>
         </div>
       </div>
 
-      <!-- Corps à deux colonnes -->
       <div class="modal-body-layout">
-        <!-- Colonne Gauche : Zone Domaines -->
-        <div style="display: flex; flex-direction: column;">
-          <div class="info-row" style="flex-grow: 1; display: flex; flex-direction: column;">
-            <label style="font-size: 12px; font-weight: 700;">🍷 DOMAINES ASSOCIÉS</label>
-            <textarea id="m-input-domains" class="modal-field-edit" style="flex-grow: 1; min-height: 220px; resize: vertical;" placeholder="Saisir les domaines gérés par cet importateur..."></textarea>
-          </div>
-        </div>
-
-        <!-- Colonne Droite : Informations & Couleurs -->
         <div>
           <div class="info-row">
             <label>Couleur Pastel du Statut</label>
@@ -250,36 +224,36 @@
 
           <div class="info-row">
             <label>Lien Photo / Logo (URL Google Drive / ImgBB)</label>
-            <input type="text" id="m-input-avatar" class="modal-field-edit" placeholder="https://lh3.googleusercontent.com/d/...">
+            <input type="text" id="m-input-avatar" class="modal-field-edit" placeholder="https://lh3.googleusercontent.com/d/..." onchange="saveModalChanges()">
           </div>
 
-          <div class="info-row"><label>Entreprise</label><input type="text" id="m-input-company" class="modal-field-edit"></div>
-          <div class="info-row"><label>Contact (Nom)</label><input type="text" id="m-input-contact" class="modal-field-edit"></div>
-          <div class="info-row"><label>Activité</label><input type="text" id="m-input-activity" class="modal-field-edit"></div>
-          <div class="info-row"><label>Email</label><input type="email" id="m-input-email" class="modal-field-edit"></div>
-          <div class="info-row"><label>Téléphone</label><input type="text" id="m-input-phone" class="modal-field-edit"></div>
-          <div class="info-row"><label>Remarque / Notes</label><textarea id="m-input-notes" rows="2" class="modal-field-edit"></textarea></div>
+          <div class="info-row"><label>Entreprise</label><input type="text" id="m-input-company" class="modal-field-edit" onchange="saveModalChanges()"></div>
+          <div class="info-row"><label>Contact (Nom)</label><input type="text" id="m-input-contact" class="modal-field-edit" onchange="saveModalChanges()"></div>
+          <div class="info-row"><label>Activité</label><input type="text" id="m-input-activity" class="modal-field-edit" onchange="saveModalChanges()"></div>
+          <div class="info-row"><label>Email</label><input type="email" id="m-input-email" class="modal-field-edit" onchange="saveModalChanges()"></div>
+          <div class="info-row"><label>Téléphone</label><input type="text" id="m-input-phone" class="modal-field-edit" onchange="saveModalChanges()"></div>
+          <div class="info-row"><label>Remarque / Notes</label><textarea id="m-input-notes" rows="2" class="modal-field-edit" onchange="saveModalChanges()"></textarea></div>
+        </div>
 
-          <button class="btn btn-primary" style="width:100%; justify-content:center; margin-top:14px; padding:10px;" onclick="saveModalChanges()">Enregistrer la fiche</button>
+        <div style="display: flex; flex-direction: column;">
+          <div class="info-row" style="flex-grow: 1; display: flex; flex-direction: column;">
+            <label style="font-size: 11px; font-weight: 700;">🍷 DOMAINES ASSOCIÉS</label>
+            <textarea id="m-input-domains" class="modal-field-edit" style="flex-grow: 1; min-height: 250px; resize: vertical;" placeholder="Saisir les domaines gérés..." onchange="saveModalChanges()"></textarea>
+          </div>
         </div>
       </div>
     </div>
-  </div>
-
-  <div class="lightbox-overlay" id="lightbox" onclick="closeLightbox()">
-    <img src="" id="lightbox-img" class="lightbox-img" alt="Photo agrandie">
   </div>
 
   <input type="file" id="file-input" onchange="handleFileSelect(event)">
 
   <script>
     const JSONBIN_BIN_ID = "6ace1c3eac6210605a230f14";
-    const JSONBIN_API_KEY = "$2a$10$w85I3zYfW8X2qG3L7s/g2.1wVj5sZ8J"; // Token d'accès
-    const APP_PASS_HASH = "8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918";
+    const JSONBIN_API_KEY = "$2a$10$w85I3zYfW8X2qG3L7s/g2.1wVj5sZ8J";
 
     let state = { domains: [], importers: [], links: [] };
     let activeModalId = null;
-    let linkingSourceId = null;
+    let linkingSource = null; // { id, type }
     let isLinkingMode = false;
 
     function unlockApp() {
@@ -308,7 +282,7 @@
           }
         }
       } catch (e) { console.error(e); }
-      updateSyncStatus('online', 'Hors ligne (Local)');
+      updateSyncStatus('online', 'Hors ligne');
       renderWorkspace();
     }
 
@@ -327,10 +301,8 @@
     }
 
     function updateSyncStatus(status, text) {
-      const dot = document.getElementById('sync-dot');
-      const label = document.getElementById('sync-text');
-      label.innerText = text;
-      dot.className = 'status-dot ' + (status === 'syncing' ? 'syncing' : '');
+      document.getElementById('sync-text').innerText = text;
+      document.getElementById('sync-dot').className = 'status-dot ' + (status === 'syncing' ? 'syncing' : '');
     }
 
     function renderWorkspace() {
@@ -343,6 +315,10 @@
         el.id = `card-${d.id}`;
         el.style.left = `${d.x}px`;
         el.style.top = `${d.y}px`;
+        if (linkingSource && linkingSource.id === d.id) {
+          el.classList.add('selected-for-link');
+        }
+
         el.innerHTML = `
           <div class="domain-region">${d.region || 'Domaine'}</div>
           <div class="domain-name">${d.name}</div>
@@ -350,6 +326,12 @@
             <button class="btn-icon" onclick="deleteItem('domain', '${d.id}')">✕</button>
           </div>
         `;
+
+        el.onclick = (e) => {
+          if (e.target.classList.contains('btn-icon')) return;
+          if (isLinkingMode) handleLinkingClick(d.id, 'domain');
+        };
+
         makeDraggable(el, d);
         ws.appendChild(el);
       });
@@ -361,7 +343,10 @@
         el.style.left = `${imp.x}px`;
         el.style.top = `${imp.y}px`;
         el.setAttribute('data-color', imp.color || 'none');
-        
+        if (linkingSource && linkingSource.id === imp.id) {
+          el.classList.add('selected-for-link');
+        }
+
         const avatarUrl = imp.avatar || 'https://via.placeholder.com/50?text=Logo';
         el.innerHTML = `
           <img src="${avatarUrl}" class="importer-avatar" onerror="this.src='https://via.placeholder.com/50?text=Logo'">
@@ -373,11 +358,14 @@
             <button class="btn-icon" onclick="deleteItem('importer', '${imp.id}')">✕</button>
           </div>
         `;
-        
+
+        el.onmouseenter = () => {
+          if (!isLinkingMode) openModal(imp.id);
+        };
+
         el.onclick = (e) => {
           if (e.target.classList.contains('btn-icon')) return;
-          if (isLinkingMode) handleLinkingClick(imp.id);
-          else openModal(imp.id);
+          if (isLinkingMode) handleLinkingClick(imp.id, 'importer');
         };
 
         makeDraggable(el, imp);
@@ -447,8 +435,8 @@
 
       document.getElementById('m-company-title').innerText = imp.company || 'Nouvel Importateur';
       document.getElementById('m-contact-title').innerText = imp.contact ? `Contact : ${imp.contact}` : 'Aucun contact saisi';
-      document.getElementById('m-avatar').src = imp.avatar || 'https://via.placeholder.com/80?text=Logo';
-      
+      document.getElementById('m-avatar').src = imp.avatar || 'https://via.placeholder.com/65?text=Logo';
+
       document.getElementById('m-input-company').value = imp.company || '';
       document.getElementById('m-input-contact').value = imp.contact || '';
       document.getElementById('m-input-activity').value = imp.activity || '';
@@ -457,9 +445,8 @@
       document.getElementById('m-input-avatar').value = imp.avatar || '';
       document.getElementById('m-input-notes').value = imp.notes || '';
       document.getElementById('m-input-domains').value = imp.domainsText || '';
-      
-      selectColor(imp.color || 'none');
 
+      selectColor(imp.color || 'none');
       document.getElementById('info-modal').classList.add('active');
     }
 
@@ -468,6 +455,7 @@
       document.querySelectorAll('.color-option').forEach(el => {
         el.classList.toggle('selected', el.getAttribute('data-color') === colorName);
       });
+      saveModalChanges();
     }
 
     function closeModal() {
@@ -492,20 +480,62 @@
         renderWorkspace();
         saveToCloud();
       }
-      closeModal();
+    }
+
+    function toggleLinkingMode() {
+      isLinkingMode = !isLinkingMode;
+      document.getElementById('btn-toggle-link').classList.toggle('btn-active', isLinkingMode);
+      document.getElementById('linking-banner').style.display = isLinkingMode ? 'block' : 'none';
+      linkingSource = null;
+      renderWorkspace();
+    }
+
+    function handleLinkingClick(id, type) {
+      // 1. Premier clic : Sélection initiale
+      if (!linkingSource) {
+        linkingSource = { id, type };
+        renderWorkspace();
+        return;
+      }
+
+      // 2. Clic sur le MÊME élément : Annulation/Désélection
+      if (linkingSource.id === id) {
+        linkingSource = null;
+        renderWorkspace();
+        return;
+      }
+
+      // 3. Clic entre deux types différents (Importateur <-> Domaine) : Liaison/Déliaison
+      if (linkingSource.type !== type) {
+        const importerId = type === 'importer' ? id : linkingSource.id;
+        const domainId = type === 'domain' ? id : linkingSource.id;
+
+        const idx = state.links.findIndex(l => l.importerId === importerId && l.domainId === domainId);
+        if (idx >= 0) {
+          state.links.splice(idx, 1);
+        } else {
+          state.links.push({ importerId, domainId });
+        }
+        
+        linkingSource = null;
+        renderWorkspace();
+        saveToCloud();
+      } else {
+        // Clic sur un autre élément de même type : Basculer la sélection vers le nouveau
+        linkingSource = { id, type };
+        renderWorkspace();
+      }
     }
 
     function autoLayout() {
       const w = window.innerWidth;
       const h = window.innerHeight;
-      
-      // Placer les domaines à droite
+
       state.domains.forEach((d, idx) => {
         d.x = w - 200 - (Math.floor(idx / 8) * 160);
         d.y = 100 + ((idx % 8) * 65);
       });
 
-      // Placer les importateurs en U autour du centre
       state.importers.forEach((imp, idx) => {
         if (idx < 6) {
           imp.x = 80 + (idx * 230);
@@ -521,41 +551,6 @@
 
       renderWorkspace();
       saveToCloud();
-    }
-
-    function openLightbox() {
-      const src = document.getElementById('m-avatar').src;
-      if (src) {
-        document.getElementById('lightbox-img').src = src;
-        document.getElementById('lightbox').classList.add('active');
-      }
-    }
-
-    function closeLightbox() {
-      document.getElementById('lightbox').classList.remove('active');
-    }
-
-    function toggleLinkingMode() {
-      isLinkingMode = !isLinkingMode;
-      document.getElementById('btn-toggle-link').classList.toggle('btn-active', isLinkingMode);
-      document.getElementById('linking-banner').style.display = isLinkingMode ? 'block' : 'none';
-      linkingSourceId = null;
-    }
-
-    function handleLinkingClick(id) {
-      if (!linkingSourceId) {
-        linkingSourceId = id;
-      } else {
-        if (linkingSourceId !== id) {
-          // basculer la liaison
-          const idx = state.links.findIndex(l => l.importerId === linkingSourceId && l.domainId === id);
-          if (idx >= 0) state.links.splice(idx, 1);
-          else state.links.push({ importerId: linkingSourceId, domainId: id });
-          renderWorkspace();
-          saveToCloud();
-        }
-        linkingSourceId = null;
-      }
     }
 
     function deleteItem(type, id) {
@@ -593,7 +588,6 @@
     }
 
     function triggerJSONImport() { document.getElementById('file-input').click(); }
-    function triggerExcelImport() { document.getElementById('file-input').click(); }
 
     function handleFileSelect(e) {
       const file = e.target.files[0];
@@ -621,7 +615,6 @@
       }
     }
 
-    // Auto-déverrouillage au chargement pour simplifier
     window.onload = unlockApp;
   </script>
 </body>
