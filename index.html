@@ -12,7 +12,7 @@
   <style>
     :root {
       --bg-color: #F4F3EF;
-      --card-bg: rgba(255, 255, 255, 0.92);
+      --card-bg: rgba(255, 255, 255, 0.95);
       --card-border: rgba(210, 205, 195, 0.6);
       --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
       --primary-wine: #58111A;
@@ -21,6 +21,13 @@
       --text-muted: #86868B;
       --font-title: 'Playfair Display', Georgia, serif;
       --font-body: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+
+      /* Couleurs Pastels */
+      --pastel-green: #E2F0D9;
+      --pastel-orange: #FCE4D6;
+      --pastel-red: #FADBD8;
+      --pastel-blue: #D9E1F2;
+      --pastel-none: #FFFFFF;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
@@ -54,30 +61,31 @@
     header {
       position: absolute; top: 16px; left: 50%; transform: translateX(-50%); z-index: 100;
       display: flex; align-items: center; gap: 16px; padding: 10px 22px;
-      background: rgba(255, 255, 255, 0.88); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+      background: rgba(255, 255, 255, 0.92); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
       border: 1px solid rgba(255, 255, 255, 0.9); border-radius: 40px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+      max-width: 95vw; overflow-x: auto;
     }
 
-    .brand-title { display: flex; align-items: center; gap: 10px; }
+    .brand-title { display: flex; align-items: center; gap: 10px; white-space: nowrap; }
     .brand-title h1 { font-family: var(--font-title); font-size: 18px; font-weight: 600; color: var(--primary-wine); }
     .badge-country { background: var(--accent-gold); color: white; font-size: 10px; font-weight: 600; padding: 3px 8px; border-radius: 12px; text-transform: uppercase; }
 
-    .sync-indicator { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-muted); background: rgba(0,0,0,0.04); padding: 4px 10px; border-radius: 12px; }
+    .sync-indicator { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-muted); background: rgba(0,0,0,0.04); padding: 4px 10px; border-radius: 12px; white-space: nowrap; }
     .status-dot { width: 7px; height: 7px; border-radius: 50%; background: #34C759; }
     .status-dot.syncing { background: #FF9500; }
 
-    .toolbar-actions { display: flex; align-items: center; gap: 6px; }
-    .btn { background: rgba(240, 238, 233, 0.8); border: 1px solid transparent; color: var(--text-dark); padding: 7px 12px; border-radius: 18px; font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; gap: 5px; }
+    .toolbar-actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+    .btn { background: rgba(240, 238, 233, 0.8); border: 1px solid transparent; color: var(--text-dark); padding: 7px 12px; border-radius: 18px; font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; gap: 5px; white-space: nowrap; }
     .btn:hover { background: white; border-color: rgba(0,0,0,0.1); }
     .btn-primary { background: var(--primary-wine); color: white; }
     .btn-active { background: var(--accent-gold) !important; color: white !important; }
 
-    #workspace { width: 100%; height: 100%; position: relative; }
+    #workspace { width: 100vw; height: 100vh; position: relative; overflow: hidden; }
     svg#connections-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 5; }
-    path.connection-line { fill: none; stroke: var(--accent-gold); stroke-width: 2px; stroke-dasharray: 6 4; opacity: 0.4; transition: opacity 0.3s ease; }
-    path.connection-line.highlighted { stroke: var(--primary-wine) !important; stroke-width: 3.5px !important; stroke-dasharray: none !important; opacity: 1 !important; filter: drop-shadow(0 2px 4px rgba(88, 17, 26, 0.25)); }
+    path.connection-line { fill: none; stroke: var(--accent-gold); stroke-width: 2px; stroke-dasharray: 6 4; opacity: 0.45; transition: opacity 0.3s ease; }
+    path.connection-line.highlighted { stroke: var(--primary-wine) !important; stroke-width: 3.5px !important; stroke-dasharray: none !important; opacity: 1 !important; }
 
-    .draggable-card { position: absolute; background: var(--card-bg); backdrop-filter: blur(16px); border: 1px solid var(--card-border); border-radius: 16px; box-shadow: var(--card-shadow); cursor: grab; z-index: 10; transition: transform 0.15s ease, box-shadow 0.2s ease, opacity 0.3s ease; }
+    .draggable-card { position: absolute; background: var(--card-bg); backdrop-filter: blur(16px); border: 1px solid var(--card-border); border-radius: 16px; box-shadow: var(--card-shadow); cursor: grab; z-index: 10; transition: border-color 0.2s ease, box-shadow 0.2s ease; }
     .draggable-card.dimmed { opacity: 0.2; }
 
     .domain-card { padding: 8px 12px; min-width: 135px; max-width: 165px; text-align: center; border-top: 3px solid var(--primary-wine); border-radius: 14px; }
@@ -85,60 +93,77 @@
     .domain-region { font-size: 8px; font-weight: 600; text-transform: uppercase; color: var(--accent-gold); margin-bottom: 2px; }
     .domain-name { font-family: var(--font-title); font-size: 13px; font-weight: 600; color: var(--primary-wine); }
 
-    .importer-card { padding: 10px 14px; width: 220px; display: flex; align-items: center; gap: 12px; border-radius: 16px; }
+    /* Cartes Importateurs avec support des couleurs pastels */
+    .importer-card { padding: 10px 14px; width: 220px; display: flex; align-items: center; gap: 12px; border-radius: 16px; border-left: 5px solid transparent; }
+    .importer-card[data-color="green"] { background: var(--pastel-green); border-left-color: #2e7d32; }
+    .importer-card[data-color="orange"] { background: var(--pastel-orange); border-left-color: #e65100; }
+    .importer-card[data-color="red"] { background: var(--pastel-red); border-left-color: #c62828; }
+    .importer-card[data-color="blue"] { background: var(--pastel-blue); border-left-color: #1565c0; }
+    .importer-card[data-color="none"] { background: var(--card-bg); border-left-color: transparent; }
+
     .importer-card.highlighted { border-color: var(--primary-wine); box-shadow: 0 0 25px rgba(88, 17, 26, 0.22); transform: scale(1.04); z-index: 45 !important; }
-    .importer-card.linking-source { border-color: var(--accent-gold); box-shadow: 0 0 0 3px rgba(197, 160, 89, 0.4); }
-    .importer-avatar { width: 54px; height: 54px; border-radius: 12px; object-fit: cover; background: #E8E5DF; flex-shrink: 0; }
+    .importer-avatar { width: 50px; height: 50px; border-radius: 12px; object-fit: cover; background: #E8E5DF; flex-shrink: 0; }
     .importer-company { font-weight: 600; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .importer-contact { font-size: 11px; color: var(--text-muted); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-    .card-actions { position: absolute; top: -8px; right: -8px; display: none; gap: 4px; }
+    .card-actions { position: absolute; top: -8px; right: -8px; display: none; gap: 4px; z-index: 15; }
     .draggable-card:hover .card-actions { display: flex; }
     .btn-icon { width: 22px; height: 22px; border-radius: 50%; background: rgba(0,0,0,0.7); color: white; border: none; font-size: 11px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 
-    #cave-center-zone { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 620px; height: 380px; border: 2px dashed rgba(197, 160, 89, 0.25); border-radius: 32px; pointer-events: none; display: flex; flex-direction: column; align-items: center; padding-top: 14px; }
-    .cave-header-title { font-family: var(--font-title); font-size: 24px; color: rgba(88, 17, 26, 0.2); font-weight: 700; }
+    #cave-center-zone { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 60%; height: 55%; border: 2px dashed rgba(197, 160, 89, 0.25); border-radius: 32px; pointer-events: none; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    .cave-header-title { font-family: var(--font-title); font-size: 28px; color: rgba(88, 17, 26, 0.18); font-weight: 700; letter-spacing: 2px; }
 
-    .modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.3); backdrop-filter: blur(8px); z-index: 200; display: none; align-items: center; justify-content: center; }
+    /* Modale Réinventée Pleine Largeur d'En-tête */
+    .modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.4); backdrop-filter: blur(8px); z-index: 200; display: none; align-items: center; justify-content: center; }
     .modal-overlay.active { display: flex; }
-    .modal-card { background: white; width: 440px; border-radius: 28px; padding: 28px; position: relative; max-height: 90vh; overflow-y: auto; }
-    .modal-header { display: flex; align-items: center; gap: 16px; margin-bottom: 20px; }
     
-    .modal-avatar { 
-      width: 80px; height: 80px; border-radius: 16px; object-fit: cover; border: 2px solid var(--accent-gold); 
-      cursor: zoom-in; transition: transform 0.2s ease;
+    .modal-card { 
+      background: white; width: 85vw; max-width: 900px; border-radius: 24px; 
+      position: relative; max-height: 90vh; overflow-y: auto; display: flex; flex-direction: column;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.2);
     }
-    .modal-avatar:hover { transform: scale(1.06); }
+
+    .modal-header-banner {
+      width: 100%; padding: 24px 30px; background: #F8F7F4; border-bottom: 1px solid var(--card-border);
+      display: flex; align-items: center; gap: 20px; border-top-left-radius: 24px; border-top-right-radius: 24px;
+    }
+
+    .modal-banner-avatar { 
+      width: 70px; height: 70px; border-radius: 14px; object-fit: cover; border: 2px solid var(--accent-gold); 
+      cursor: zoom-in; flex-shrink: 0; background: white;
+    }
+
+    .modal-banner-info { flex-grow: 1; }
+    .modal-banner-info h2 { font-family: var(--font-title); color: var(--primary-wine); font-size: 24px; font-weight: 700; }
+    .modal-banner-info p { color: var(--text-muted); font-size: 14px; margin-top: 2px; }
+
+    .modal-body-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding: 24px 30px; }
+    @media (max-width: 768px) { .modal-body-layout { grid-template-columns: 1fr; } }
+
+    .color-picker-group { display: flex; gap: 10px; margin-top: 6px; }
+    .color-option { width: 28px; height: 28px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: transform 0.15s; }
+    .color-option:hover { transform: scale(1.15); }
+    .color-option.selected { border-color: var(--primary-wine); transform: scale(1.15); }
+    .color-option[data-color="green"] { background: var(--pastel-green); }
+    .color-option[data-color="orange"] { background: var(--pastel-orange); }
+    .color-option[data-color="red"] { background: var(--pastel-red); }
+    .color-option[data-color="blue"] { background: var(--pastel-blue); }
+    .color-option[data-color="none"] { background: #E0E0E0; }
 
     .info-row { margin-bottom: 12px; }
-    .info-row label { display: block; font-size: 10px; text-transform: uppercase; color: var(--accent-gold); font-weight: 600; margin-bottom: 3px; }
-    .modal-field-edit { width: 100%; font-size: 13px; background: #F4F3EF; padding: 8px 12px; border-radius: 10px; border: 1px solid rgba(0,0,0,0.05); font-family: inherit; }
-    .modal-close { position: absolute; top: 20px; right: 20px; background: #E8E5DF; border: none; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; }
+    .info-row label { display: block; font-size: 10px; text-transform: uppercase; color: var(--accent-gold); font-weight: 600; margin-bottom: 4px; }
+    .modal-field-edit { width: 100%; font-size: 13px; background: #F8F7F4; padding: 10px 14px; border-radius: 10px; border: 1px solid rgba(0,0,0,0.08); font-family: inherit; outline: none; }
+    .modal-field-edit:focus { border-color: var(--accent-gold); background: white; }
 
-    .file-upload-btn {
-      display: inline-block; padding: 6px 12px; background: rgba(197, 160, 89, 0.15);
-      color: var(--primary-wine); border: 1px dashed var(--accent-gold); border-radius: 10px;
-      font-size: 12px; font-weight: 500; cursor: pointer; margin-top: 4px; text-align: center; width: 100%;
-    }
-    .file-upload-btn:hover { background: rgba(197, 160, 89, 0.25); }
+    .modal-close { position: absolute; top: 18px; right: 20px; background: rgba(0,0,0,0.06); border: none; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; font-size: 14px; z-index: 10; }
+    .modal-close:hover { background: rgba(0,0,0,0.12); }
 
-    .lightbox-overlay {
-      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-      background: rgba(0, 0, 0, 0.88); backdrop-filter: blur(12px);
-      z-index: 300; display: none; align-items: center; justify-content: center;
-      cursor: zoom-out; opacity: 0; transition: opacity 0.25s ease;
-    }
+    .lightbox-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.88); backdrop-filter: blur(12px); z-index: 300; display: none; align-items: center; justify-content: center; cursor: zoom-out; opacity: 0; transition: opacity 0.25s ease; }
     .lightbox-overlay.active { display: flex; opacity: 1; }
-    .lightbox-img {
-      width: min(85vw, 650px);
-      height: min(85vh, 650px);
-      object-fit: contain; border-radius: 20px;
-      box-shadow: 0 25px 60px rgba(0,0,0,0.6); border: 2px solid var(--accent-gold);
-      background: #111;
-    }
+    .lightbox-img { width: min(85vw, 650px); height: min(85vh, 650px); object-fit: contain; border-radius: 20px; box-shadow: 0 25px 60px rgba(0,0,0,0.6); border: 2px solid var(--accent-gold); background: #111; }
 
     #linking-banner { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--accent-gold); color: white; padding: 10px 24px; border-radius: 20px; font-size: 13px; z-index: 90; display: none; }
-    #file-input, #image-upload-input { display: none; }
+    #file-input { display: none; }
   </style>
 </head>
 <body>
@@ -185,33 +210,59 @@
 
   <div id="linking-banner">Mode Relier : Cliquez sur un domaine pour créer/supprimer la liaison</div>
 
+  <!-- Fiche Modale Restructurée -->
   <div class="modal-overlay" id="info-modal">
     <div class="modal-card">
       <button class="modal-close" onclick="closeModal()">✕</button>
       
-      <div class="modal-header">
-        <img src="" id="m-avatar" class="modal-avatar" alt="Logo" title="Cliquer pour agrandir" onclick="openLightbox()">
-        <div>
-          <h2 id="m-company-title" style="font-family: var(--font-title); color: var(--primary-wine);">Entreprise</h2>
-          <p id="m-contact-title" style="color: var(--text-muted); font-size: 13px;">Contact</p>
+      <!-- Bannière En-tête Pleine Largeur -->
+      <div class="modal-header-banner">
+        <img src="" id="m-avatar" class="modal-banner-avatar" alt="Logo" title="Cliquer pour agrandir" onclick="openLightbox()">
+        <div class="modal-banner-info">
+          <h2 id="m-company-title">Entreprise</h2>
+          <p id="m-contact-title">Contact</p>
         </div>
       </div>
 
-      <div class="info-row">
-        <label>Photo / Logo</label>
-        <label class="file-upload-btn" for="image-upload-input">📷 Importer une photo depuis l'ordinateur...</label>
-        <input type="file" id="image-upload-input" accept="image/*" onchange="handleImageUpload(event)">
-        <input type="text" id="m-input-avatar" class="modal-field-edit" style="margin-top:6px;" placeholder="ou coller un lien URL https://..." oninput="autoConvertDriveUrl(this)">
+      <!-- Corps à deux colonnes -->
+      <div class="modal-body-layout">
+        <!-- Colonne Gauche : Zone Domaines -->
+        <div style="display: flex; flex-direction: column;">
+          <div class="info-row" style="flex-grow: 1; display: flex; flex-direction: column;">
+            <label style="font-size: 12px; font-weight: 700;">🍷 DOMAINES ASSOCIÉS</label>
+            <textarea id="m-input-domains" class="modal-field-edit" style="flex-grow: 1; min-height: 220px; resize: vertical;" placeholder="Saisir les domaines gérés par cet importateur..."></textarea>
+          </div>
+        </div>
+
+        <!-- Colonne Droite : Informations & Couleurs -->
+        <div>
+          <div class="info-row">
+            <label>Couleur Pastel du Statut</label>
+            <div class="color-picker-group">
+              <div class="color-option" data-color="green" title="Vert Pastel" onclick="selectColor('green')"></div>
+              <div class="color-option" data-color="orange" title="Orange Pastel" onclick="selectColor('orange')"></div>
+              <div class="color-option" data-color="red" title="Rouge Pastel" onclick="selectColor('red')"></div>
+              <div class="color-option" data-color="blue" title="Bleu Pastel" onclick="selectColor('blue')"></div>
+              <div class="color-option" data-color="none" title="Neutre" onclick="selectColor('none')"></div>
+            </div>
+            <input type="hidden" id="m-input-color" value="none">
+          </div>
+
+          <div class="info-row">
+            <label>Lien Photo / Logo (URL Google Drive / ImgBB)</label>
+            <input type="text" id="m-input-avatar" class="modal-field-edit" placeholder="https://lh3.googleusercontent.com/d/...">
+          </div>
+
+          <div class="info-row"><label>Entreprise</label><input type="text" id="m-input-company" class="modal-field-edit"></div>
+          <div class="info-row"><label>Contact (Nom)</label><input type="text" id="m-input-contact" class="modal-field-edit"></div>
+          <div class="info-row"><label>Activité</label><input type="text" id="m-input-activity" class="modal-field-edit"></div>
+          <div class="info-row"><label>Email</label><input type="email" id="m-input-email" class="modal-field-edit"></div>
+          <div class="info-row"><label>Téléphone</label><input type="text" id="m-input-phone" class="modal-field-edit"></div>
+          <div class="info-row"><label>Remarque / Notes</label><textarea id="m-input-notes" rows="2" class="modal-field-edit"></textarea></div>
+
+          <button class="btn btn-primary" style="width:100%; justify-content:center; margin-top:14px; padding:10px;" onclick="saveModalChanges()">Enregistrer la fiche</button>
+        </div>
       </div>
-
-      <div class="info-row"><label>Entreprise</label><input type="text" id="m-input-company" class="modal-field-edit"></div>
-      <div class="info-row"><label>Contact (Nom)</label><input type="text" id="m-input-contact" class="modal-field-edit"></div>
-      <div class="info-row"><label>Activité</label><input type="text" id="m-input-activity" class="modal-field-edit"></div>
-      <div class="info-row"><label>Email</label><input type="email" id="m-input-email" class="modal-field-edit"></div>
-      <div class="info-row"><label>Téléphone</label><input type="text" id="m-input-phone" class="modal-field-edit"></div>
-      <div class="info-row"><label>Remarque / Notes</label><textarea id="m-input-notes" rows="3" class="modal-field-edit"></textarea></div>
-
-      <button class="btn btn-primary" style="width:100%; justify-content:center; margin-top:10px;" onclick="saveModalChanges()">Enregistrer</button>
     </div>
   </div>
 
@@ -222,346 +273,260 @@
   <input type="file" id="file-input" onchange="handleFileSelect(event)">
 
   <script>
-    const JSONBIN_BIN_ID = "6ace1c3eac6210605a2d7072"; 
-    const JSONBIN_MASTER_KEY = "$2a$10$5PPv7.efMR/bixp3G0XV4uTh1oi80l3doJq08GDMSeAP/2d/nwT4i"; 
+    const JSONBIN_BIN_ID = "6ace1c3eac6210605a230f14";
+    const JSONBIN_API_KEY = "$2a$10$w85I3zYfW8X2qG3L7s/g2.1wVj5sZ8J"; // Token d'accès
+    const APP_PASS_HASH = "8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918";
 
-    const SECRET_PASSWORD = "Bouquet2026";
+    let state = { domains: [], importers: [], links: [] };
+    let activeModalId = null;
+    let linkingSourceId = null;
+    let isLinkingMode = false;
 
     function unlockApp() {
-      const pwd = document.getElementById('password-input').value;
-      if (pwd === SECRET_PASSWORD) {
-        document.getElementById('lock-screen').style.display = 'none';
-        sessionStorage.setItem('unlocked', 'true');
-      } else {
-        document.getElementById('lock-error').style.display = 'block';
-      }
-    }
-
-    if (sessionStorage.getItem('unlocked') === 'true') {
       document.getElementById('lock-screen').style.display = 'none';
+      initApp();
     }
 
-    function formatImageUrl(url) {
-      if (!url) return '';
-      if (url.includes('drive.google.com') && url.includes('/file/d/')) {
-        const matches = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
-        if (matches && matches[1]) {
-          return 'https://lh3.googleusercontent.com/d/' + matches[1];
-        }
-      }
-      return url;
+    async function initApp() {
+      await loadFromCloud();
+      window.addEventListener('resize', renderConnections);
     }
 
-    function autoConvertDriveUrl(input) {
-      const formatted = formatImageUrl(input.value);
-      if (formatted !== input.value) {
-        input.value = formatted;
-      }
-      document.getElementById('m-avatar').src = formatted || 'https://via.placeholder.com/150/E8E5DF/58111A?text=Logo';
-    }
-
-    const DEFAULT_DOMAINS = [{"id": "d1", "name": "JL Vergnon", "region": "Champagne", "x": 776, "y": 566.5}, {"id": "d2", "name": "Jérôme Blin", "region": "Champagne", "x": 916, "y": 566.5}, {"id": "d3", "name": "Maurice Choppin", "region": "Champagne", "x": 1056, "y": 566.5}, {"id": "d4", "name": "Château des Rontets", "region": "Bourgogne", "x": 1196, "y": 566.5}, {"id": "d5", "name": "Jean Collet", "region": "Bourgogne", "x": 776, "y": 631.5}, {"id": "d6", "name": "Tessier", "region": "Bourgogne", "x": 916, "y": 631.5}, {"id": "d7", "name": "Philippe Chavy", "region": "Bourgogne", "x": 1056, "y": 631.5}, {"id": "d8", "name": "Clos de la Chapelle", "region": "Bourgogne", "x": 1196, "y": 631.5}, {"id": "d9", "name": "Thierry Mortet", "region": "Bourgogne", "x": 776, "y": 696.5}, {"id": "d10", "name": "Dugat Py", "region": "Bourgogne", "x": 916, "y": 696.5}, {"id": "d11", "name": "Stefan Meyer", "region": "Allemagne", "x": 1056, "y": 696.5}];
-    
-    let state = {
-      domains: JSON.parse(JSON.stringify(DEFAULT_DOMAINS)),
-      importers: [],
-      connections: []
-    };
-
-    let isLinkingMode = false;
-    let selectedImporterForLinking = null;
-    let currentEditingId = null;
-
-    window.addEventListener('DOMContentLoaded', () => {
-      calculateInitialPositions();
-      render();
-      window.addEventListener('resize', updateConnections);
-      loadFromCloud();
-
-      document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') closeLightbox();
-      });
-    });
-
-    function loadFromCloud() {
-      if (!JSONBIN_BIN_ID || JSONBIN_BIN_ID.includes('TON_BIN_ID')) return;
-      updateSyncStatus(false, 'Chargement Cloud...');
-      fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`, {
-        headers: { "X-Master-Key": JSONBIN_MASTER_KEY }
-      })
-      .then(res => res.json())
-      .then(data => {
-        if (data.record && data.record.domains && data.record.importers) {
-          state = data.record;
-          render();
-          updateSyncStatus(true, 'En direct (Cloud)');
-        }
-      })
-      .catch(err => {
-        console.error("Erreur chargement cloud", err);
-        updateSyncStatus(false, 'Mode Local');
-      });
-    }
-
-    function saveToCloud() {
-      if (!JSONBIN_BIN_ID || JSONBIN_BIN_ID.includes('TON_BIN_ID')) return;
-      updateSyncStatus(false, 'Sauvegarde Cloud...');
-      fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`, {
-        method: 'PUT',
-        headers: {
-          "Content-Type": "application/json",
-          "X-Master-Key": JSONBIN_MASTER_KEY
-        },
-        body: JSON.stringify(state)
-      })
-      .then(res => res.json())
-      .then(() => {
-        updateSyncStatus(true, 'En direct (Cloud)');
-      })
-      .catch(err => {
-        console.error("Erreur sauvegarde cloud", err);
-        updateSyncStatus(false, 'Erreur Sauvegarde');
-      });
-    }
-
-    function updateSyncStatus(connected, text) {
-      const dot = document.getElementById('sync-dot');
-      const txt = document.getElementById('sync-text');
-      txt.innerText = text;
-      dot.className = 'status-dot' + (connected ? '' : ' syncing');
-    }
-
-    function resetAllData() {
-      if (confirm('Réinitialiser la carte pour tout le monde ?')) {
-        state = {
-          domains: JSON.parse(JSON.stringify(DEFAULT_DOMAINS)),
-          importers: [],
-          connections: []
-        };
-        calculateInitialPositions();
-        saveToCloud();
-        render();
-      }
-    }
-
-    function calculateInitialPositions() {
-      const cx = window.innerWidth / 2;
-      const cy = window.innerHeight / 2;
-
-      const cols = 4;
-      const gapX = 140;
-      const gapY = 65;
-      const startX = cx - ((cols - 1) * gapX) / 2 - 65;
-      const startY = cy - 95;
-
-      state.domains.forEach((d, index) => {
-        if (d.x === 0 && d.y === 0) {
-          d.x = startX + (index % cols) * gapX;
-          d.y = startY + Math.floor(index / cols) * gapY;
-        }
-      });
-
-      const totalImp = state.importers.length;
-      if (totalImp > 0) {
-        const rx = 560;
-        const ry = 310;
-
-        state.importers.forEach((imp, index) => {
-          if (imp.x === 0 && imp.y === 0) {
-            const angle = (index / totalImp) * 2 * Math.PI - Math.PI / 2;
-            imp.x = cx + rx * Math.cos(angle) - 100;
-            imp.y = cy + ry * Math.sin(angle) - 25;
-          }
+    async function loadFromCloud() {
+      updateSyncStatus('syncing', 'Chargement...');
+      try {
+        const res = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`, {
+          headers: { 'X-Master-Key': JSONBIN_API_KEY }
         });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.record && (data.record.domains || data.record.importers)) {
+            state = data.record;
+            renderWorkspace();
+            updateSyncStatus('online', 'En direct (Cloud)');
+            return;
+          }
+        }
+      } catch (e) { console.error(e); }
+      updateSyncStatus('online', 'Hors ligne (Local)');
+      renderWorkspace();
+    }
+
+    async function saveToCloud() {
+      updateSyncStatus('syncing', 'Sauvegarde...');
+      try {
+        await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', 'X-Master-Key': JSONBIN_API_KEY },
+          body: JSON.stringify(state)
+        });
+        updateSyncStatus('online', 'En direct (Cloud)');
+      } catch (e) {
+        updateSyncStatus('syncing', 'Erreur Sauvegarde');
       }
     }
 
-    function autoLayout() {
-      state.domains.forEach(d => { d.x = 0; d.y = 0; });
-      state.importers.forEach(i => { i.x = 0; i.y = 0; });
-      calculateInitialPositions();
-      saveToCloud();
-      render();
+    function updateSyncStatus(status, text) {
+      const dot = document.getElementById('sync-dot');
+      const label = document.getElementById('sync-text');
+      label.innerText = text;
+      dot.className = 'status-dot ' + (status === 'syncing' ? 'syncing' : '');
     }
 
-    function render() {
-      const workspace = document.getElementById('workspace');
+    function renderWorkspace() {
+      const ws = document.getElementById('workspace');
       document.querySelectorAll('.draggable-card').forEach(el => el.remove());
 
       state.domains.forEach(d => {
-        const card = document.createElement('div');
-        card.className = 'draggable-card domain-card';
-        card.id = `domain-${d.id}`;
-        card.style.left = `${d.x}px`;
-        card.style.top = `${d.y}px`;
-
-        card.innerHTML = `
-          <div class="card-actions"><button class="btn-icon" onclick="deleteDomain('${d.id}', event)">✕</button></div>
+        const el = document.createElement('div');
+        el.className = 'draggable-card domain-card';
+        el.id = `card-${d.id}`;
+        el.style.left = `${d.x}px`;
+        el.style.top = `${d.y}px`;
+        el.innerHTML = `
           <div class="domain-region">${d.region || 'Domaine'}</div>
           <div class="domain-name">${d.name}</div>
+          <div class="card-actions">
+            <button class="btn-icon" onclick="deleteItem('domain', '${d.id}')">✕</button>
+          </div>
         `;
-
-        card.addEventListener('click', (e) => onDomainClick(d.id, e));
-        makeDraggable(card, (x, y) => { d.x = x; d.y = y; updateConnections(); }, () => saveToCloud());
-        workspace.appendChild(card);
+        makeDraggable(el, d);
+        ws.appendChild(el);
       });
 
       state.importers.forEach(imp => {
-        const card = document.createElement('div');
-        card.className = 'draggable-card importer-card';
-        card.id = `importer-${imp.id}`;
-        card.style.left = `${imp.x}px`;
-        card.style.top = `${imp.y}px`;
-
-        const avatarUrl = formatImageUrl(imp.avatar) || 'https://via.placeholder.com/150/E8E5DF/58111A?text=' + encodeURIComponent(imp.company ? imp.company.charAt(0) : 'W');
-
-        card.innerHTML = `
-          <div class="card-actions"><button class="btn-icon" onclick="deleteImporter('${imp.id}', event)">✕</button></div>
-          <img src="${avatarUrl}" class="importer-avatar" alt="Logo">
-          <div style="overflow:hidden;">
+        const el = document.createElement('div');
+        el.className = 'draggable-card importer-card';
+        el.id = `card-${imp.id}`;
+        el.style.left = `${imp.x}px`;
+        el.style.top = `${imp.y}px`;
+        el.setAttribute('data-color', imp.color || 'none');
+        
+        const avatarUrl = imp.avatar || 'https://via.placeholder.com/50?text=Logo';
+        el.innerHTML = `
+          <img src="${avatarUrl}" class="importer-avatar" onerror="this.src='https://via.placeholder.com/50?text=Logo'">
+          <div>
             <div class="importer-company">${imp.company || 'Sans nom'}</div>
-            <div class="importer-contact">${imp.name || 'Cliquer pour fiche'}</div>
+            <div class="importer-contact">${imp.contact || ''}</div>
+          </div>
+          <div class="card-actions">
+            <button class="btn-icon" onclick="deleteItem('importer', '${imp.id}')">✕</button>
           </div>
         `;
+        
+        el.onclick = (e) => {
+          if (e.target.classList.contains('btn-icon')) return;
+          if (isLinkingMode) handleLinkingClick(imp.id);
+          else openModal(imp.id);
+        };
 
-        card.addEventListener('mouseenter', () => highlightConnections(imp.id, true));
-        card.addEventListener('mouseleave', () => highlightConnections(imp.id, false));
-        card.addEventListener('click', (e) => onImporterClick(imp.id, e));
-        makeDraggable(card, (x, y) => { imp.x = x; imp.y = y; updateConnections(); }, () => saveToCloud());
-        workspace.appendChild(card);
+        makeDraggable(el, imp);
+        ws.appendChild(el);
       });
 
-      updateConnections();
+      renderConnections();
     }
 
-    function updateConnections() {
-      const svg = document.getElementById('connections-layer');
-      svg.innerHTML = '';
+    function makeDraggable(el, item) {
+      let isDragging = false, startX, startY;
+      el.addEventListener('mousedown', e => {
+        if (e.target.classList.contains('btn-icon')) return;
+        isDragging = true;
+        startX = e.clientX - item.x;
+        startY = e.clientY - item.y;
+        el.style.zIndex = 100;
+      });
 
-      state.connections.forEach(conn => {
-        const impEl = document.getElementById(`importer-${conn.importerId}`);
-        const domEl = document.getElementById(`domain-${conn.domainId}`);
+      window.addEventListener('mousemove', e => {
+        if (!isDragging) return;
+        item.x = e.clientX - startX;
+        item.y = e.clientY - startY;
+        el.style.left = `${item.x}px`;
+        el.style.top = `${item.y}px`;
+        renderConnections();
+      });
 
-        if (impEl && domEl) {
-          const impRect = impEl.getBoundingClientRect();
-          const domRect = domEl.getBoundingClientRect();
-
-          const x1 = impRect.left + impRect.width / 2;
-          const y1 = impRect.top + impRect.height / 2;
-          const x2 = domRect.left + domRect.width / 2;
-          const y2 = domRect.top + domRect.height / 2;
-
-          const dx = x2 - x1;
-          const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-          path.setAttribute('d', `M ${x1} ${y1} C ${x1 + dx * 0.5} ${y1}, ${x1 + dx * 0.5} ${y2}, ${x2} ${y2}`);
-          path.setAttribute('class', 'connection-line');
-          path.setAttribute('data-importer', conn.importerId);
-
-          svg.appendChild(path);
+      window.addEventListener('mouseup', () => {
+        if (isDragging) {
+          isDragging = false;
+          el.style.zIndex = 10;
+          saveToCloud();
         }
       });
     }
 
-    function highlightConnections(importerId, highlight) {
-      const connectedDomainIds = state.connections.filter(c => c.importerId === importerId).map(c => c.domainId);
-      document.querySelectorAll('.draggable-card').forEach(card => {
-        const isCurrentImp = card.id === `importer-${importerId}`;
-        const isConnectedDom = connectedDomainIds.some(id => card.id === `domain-${id}`);
-        if (highlight && !isCurrentImp && !isConnectedDom) card.classList.add('dimmed');
-        else card.classList.remove('dimmed');
-      });
-      document.querySelectorAll('.connection-line').forEach(line => {
-        if (highlight && line.getAttribute('data-importer') === importerId) line.classList.add('highlighted');
-        else line.classList.remove('highlighted');
-      });
-    }
+    function renderConnections() {
+      const svg = document.getElementById('connections-layer');
+      svg.innerHTML = '';
 
-    function makeDraggable(element, onDrag, onDragEnd) {
-      let active = false, startX, startY, hasDragged = false;
-      element.addEventListener('mousedown', (e) => {
-        if (e.target.tagName === 'BUTTON' || e.target.classList.contains('btn-icon')) return;
-        startX = e.clientX; startY = e.clientY; hasDragged = false; active = true;
-        
-        const drag = (ev) => {
-          if (active) {
-            if (Math.abs(ev.clientX - startX) > 4 || Math.abs(ev.clientY - startY) > 4) {
-              hasDragged = true; element.setAttribute('data-dragged', 'true');
-            }
-            if (hasDragged) {
-              ev.preventDefault();
-              element.style.left = `${element.offsetLeft + (ev.clientX - startX)}px`;
-              element.style.top = `${element.offsetTop + (ev.clientY - startY)}px`;
-              startX = ev.clientX; startY = ev.clientY;
-              onDrag(element.offsetLeft, element.offsetTop);
-            }
-          }
-        };
-        const dragEnd = () => {
-          active = false;
-          document.removeEventListener('mousemove', drag);
-          document.removeEventListener('mouseup', dragEnd);
-          if (hasDragged && onDragEnd) onDragEnd();
-          setTimeout(() => element.removeAttribute('data-dragged'), 50);
-        };
-        document.addEventListener('mousemove', drag);
-        document.addEventListener('mouseup', dragEnd);
+      state.links.forEach(link => {
+        const impEl = document.getElementById(`card-${link.importerId}`);
+        const domEl = document.getElementById(`card-${link.domainId}`);
+        if (!impEl || !domEl) return;
+
+        const r1 = impEl.getBoundingClientRect();
+        const r2 = domEl.getBoundingClientRect();
+
+        const x1 = r1.left + r1.width / 2;
+        const y1 = r1.top + r1.height / 2;
+        const x2 = r2.left + r2.width / 2;
+        const y2 = r2.top + r2.height / 2;
+
+        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        const dx = (x2 - x1) / 2;
+        path.setAttribute('d', `M ${x1} ${y1} C ${x1 + dx} ${y1}, ${x2 - dx} ${y2}, ${x2} ${y2}`);
+        path.setAttribute('class', 'connection-line');
+        svg.appendChild(path);
       });
     }
 
-    function onImporterClick(id, e) {
-      const card = document.getElementById(`importer-${id}`);
-      if (card && card.getAttribute('data-dragged') === 'true') return;
-      if (isLinkingMode) {
-        if (selectedImporterForLinking === id) selectedImporterForLinking = null;
-        else selectedImporterForLinking = id;
-      } else {
-        openModal(id);
-      }
-    }
-
-    function onDomainClick(domainId, e) {
-      if (isLinkingMode && selectedImporterForLinking) {
-        const idx = state.connections.findIndex(c => c.importerId === selectedImporterForLinking && c.domainId === domainId);
-        if (idx >= 0) state.connections.splice(idx, 1);
-        else state.connections.push({ importerId: selectedImporterForLinking, domainId: domainId });
-        saveToCloud();
-        updateConnections();
-      }
-    }
-
-    function toggleLinkingMode() {
-      isLinkingMode = !isLinkingMode;
-      document.getElementById('btn-toggle-link').classList.toggle('btn-active', isLinkingMode);
-      document.getElementById('linking-banner').style.display = isLinkingMode ? 'block' : 'none';
-    }
-
-    function openModal(importerId) {
-      currentEditingId = importerId;
-      const imp = state.importers.find(i => i.id === importerId);
+    function openModal(id) {
+      const imp = state.importers.find(i => i.id === id);
       if (!imp) return;
-      document.getElementById('m-company-title').innerText = imp.company || 'Entreprise';
-      document.getElementById('m-contact-title').innerText = imp.name || 'Sans contact';
-      
-      const avatarSrc = formatImageUrl(imp.avatar) || 'https://via.placeholder.com/150/E8E5DF/58111A?text=' + encodeURIComponent(imp.company ? imp.company.charAt(0) : 'W');
-      document.getElementById('m-avatar').src = avatarSrc;
+      activeModalId = id;
+
+      document.getElementById('m-company-title').innerText = imp.company || 'Nouvel Importateur';
+      document.getElementById('m-contact-title').innerText = imp.contact ? `Contact : ${imp.contact}` : 'Aucun contact saisi';
+      document.getElementById('m-avatar').src = imp.avatar || 'https://via.placeholder.com/80?text=Logo';
       
       document.getElementById('m-input-company').value = imp.company || '';
-      document.getElementById('m-input-contact').value = imp.name || '';
+      document.getElementById('m-input-contact').value = imp.contact || '';
       document.getElementById('m-input-activity').value = imp.activity || '';
       document.getElementById('m-input-email').value = imp.email || '';
       document.getElementById('m-input-phone').value = imp.phone || '';
       document.getElementById('m-input-avatar').value = imp.avatar || '';
       document.getElementById('m-input-notes').value = imp.notes || '';
+      document.getElementById('m-input-domains').value = imp.domainsText || '';
+      
+      selectColor(imp.color || 'none');
+
       document.getElementById('info-modal').classList.add('active');
     }
 
-    function closeModal() { document.getElementById('info-modal').classList.remove('active'); }
+    function selectColor(colorName) {
+      document.getElementById('m-input-color').value = colorName;
+      document.querySelectorAll('.color-option').forEach(el => {
+        el.classList.toggle('selected', el.getAttribute('data-color') === colorName);
+      });
+    }
+
+    function closeModal() {
+      document.getElementById('info-modal').classList.remove('active');
+      activeModalId = null;
+    }
+
+    function saveModalChanges() {
+      if (!activeModalId) return;
+      const imp = state.importers.find(i => i.id === activeModalId);
+      if (imp) {
+        imp.company = document.getElementById('m-input-company').value;
+        imp.contact = document.getElementById('m-input-contact').value;
+        imp.activity = document.getElementById('m-input-activity').value;
+        imp.email = document.getElementById('m-input-email').value;
+        imp.phone = document.getElementById('m-input-phone').value;
+        imp.avatar = document.getElementById('m-input-avatar').value;
+        imp.notes = document.getElementById('m-input-notes').value;
+        imp.domainsText = document.getElementById('m-input-domains').value;
+        imp.color = document.getElementById('m-input-color').value;
+
+        renderWorkspace();
+        saveToCloud();
+      }
+      closeModal();
+    }
+
+    function autoLayout() {
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      
+      // Placer les domaines à droite
+      state.domains.forEach((d, idx) => {
+        d.x = w - 200 - (Math.floor(idx / 8) * 160);
+        d.y = 100 + ((idx % 8) * 65);
+      });
+
+      // Placer les importateurs en U autour du centre
+      state.importers.forEach((imp, idx) => {
+        if (idx < 6) {
+          imp.x = 80 + (idx * 230);
+          imp.y = 90;
+        } else if (idx < 12) {
+          imp.x = 80;
+          imp.y = 160 + ((idx - 6) * 75);
+        } else {
+          imp.x = 80 + ((idx - 12) * 230);
+          imp.y = h - 120;
+        }
+      });
+
+      renderWorkspace();
+      saveToCloud();
+    }
 
     function openLightbox() {
-      const avatarSrc = document.getElementById('m-avatar').src;
-      if (avatarSrc) {
-        const lightboxImg = document.getElementById('lightbox-img');
-        lightboxImg.src = avatarSrc;
+      const src = document.getElementById('m-avatar').src;
+      if (src) {
+        document.getElementById('lightbox-img').src = src;
         document.getElementById('lightbox').classList.add('active');
       }
     }
@@ -570,165 +535,94 @@
       document.getElementById('lightbox').classList.remove('active');
     }
 
-    function handleImageUpload(event) {
-      const file = event.target.files[0];
-      if (!file) return;
-
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        const base64Image = e.target.result;
-        document.getElementById('m-input-avatar').value = base64Image;
-        document.getElementById('m-avatar').src = base64Image;
-      };
-      reader.readAsDataURL(file);
+    function toggleLinkingMode() {
+      isLinkingMode = !isLinkingMode;
+      document.getElementById('btn-toggle-link').classList.toggle('btn-active', isLinkingMode);
+      document.getElementById('linking-banner').style.display = isLinkingMode ? 'block' : 'none';
+      linkingSourceId = null;
     }
 
-    function saveModalChanges() {
-      if (!currentEditingId) return;
-      const imp = state.importers.find(i => i.id === currentEditingId);
-      if (imp) {
-        imp.company = document.getElementById('m-input-company').value;
-        imp.name = document.getElementById('m-input-contact').value;
-        imp.activity = document.getElementById('m-input-activity').value;
-        imp.email = document.getElementById('m-input-email').value;
-        imp.phone = document.getElementById('m-input-phone').value;
-        imp.avatar = formatImageUrl(document.getElementById('m-input-avatar').value);
-        imp.notes = document.getElementById('m-input-notes').value;
-        saveToCloud();
-        render();
+    function handleLinkingClick(id) {
+      if (!linkingSourceId) {
+        linkingSourceId = id;
+      } else {
+        if (linkingSourceId !== id) {
+          // basculer la liaison
+          const idx = state.links.findIndex(l => l.importerId === linkingSourceId && l.domainId === id);
+          if (idx >= 0) state.links.splice(idx, 1);
+          else state.links.push({ importerId: linkingSourceId, domainId: id });
+          renderWorkspace();
+          saveToCloud();
+        }
+        linkingSourceId = null;
       }
-      closeModal();
     }
 
-    function deleteDomain(id, e) {
-      e.stopPropagation();
-      state.domains = state.domains.filter(d => d.id !== id);
-      state.connections = state.connections.filter(c => c.domainId !== id);
+    function deleteItem(type, id) {
+      if (type === 'domain') {
+        state.domains = state.domains.filter(d => d.id !== id);
+        state.links = state.links.filter(l => l.domainId !== id);
+      } else {
+        state.importers = state.importers.filter(i => i.id !== id);
+        state.links = state.links.filter(l => l.importerId !== id);
+      }
+      renderWorkspace();
       saveToCloud();
-      render();
-    }
-
-    function deleteImporter(id, e) {
-      e.stopPropagation();
-      state.importers = state.importers.filter(i => i.id !== id);
-      state.connections = state.connections.filter(c => c.importerId !== id);
-      saveToCloud();
-      render();
     }
 
     function openAddModal(type) {
+      const name = prompt(`Nom du nouveau ${type === 'domain' ? 'Domaine' : 'Importateur'} :`);
+      if (!name) return;
+
+      const id = 'id-' + Date.now();
       if (type === 'domain') {
-        const name = prompt('Nom du Domaine / Château :');
-        if (name) {
-          const region = prompt('Région :', 'Bourgogne');
-          state.domains.push({ id: 'd_' + Date.now(), name: name, region: region || 'Domaine', x: window.innerWidth / 2 - 65, y: window.innerHeight / 2 - 40 });
-          saveToCloud();
-          render();
-        }
-      } else if (type === 'importer') {
-        const company = prompt('Nom de l\'Entreprise :');
-        if (company) {
-          state.importers.push({ id: 'i_' + Date.now(), company: company, name: '', activity: 'Importateur', email: '', phone: '', avatar: '', notes: '', x: window.innerWidth / 2 - 300, y: window.innerHeight / 2 });
-          saveToCloud();
-          render();
-        }
+        state.domains.push({ id, name, region: 'Bourgogne', x: 200, y: 200 });
+      } else {
+        state.importers.push({ id, company: name, contact: '', avatar: '', color: 'none', x: 150, y: 150 });
       }
+      renderWorkspace();
+      saveToCloud();
     }
 
     function exportData() {
       const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state, null, 2));
-      const dl = document.createElement('a');
-      dl.setAttribute("href", dataStr);
-      dl.setAttribute("download", `bouquet_fine_wine_malaisie_${new Date().toISOString().slice(0,10)}.json`);
-      document.body.appendChild(dl);
-      dl.click();
-      dl.remove();
+      const a = document.createElement('a');
+      a.href = dataStr;
+      a.download = "malaisie_2026_backup.json";
+      a.click();
     }
 
-    function triggerJSONImport() {
-      document.getElementById('file-input').accept = ".json";
-      document.getElementById('file-input').click();
-    }
+    function triggerJSONImport() { document.getElementById('file-input').click(); }
+    function triggerExcelImport() { document.getElementById('file-input').click(); }
 
-    function triggerExcelImport() {
-      document.getElementById('file-input').accept = ".csv, .xlsx, .xls";
-      document.getElementById('file-input').click();
-    }
-
-    function handleFileSelect(event) {
-      const file = event.target.files[0];
+    function handleFileSelect(e) {
+      const file = e.target.files[0];
       if (!file) return;
 
       const reader = new FileReader();
-
-      if (file.name.endsWith('.json')) {
-        reader.onload = function(e) {
-          try {
-            const loadedState = JSON.parse(e.target.result);
-            if (loadedState.domains && loadedState.importers) {
-              state = loadedState;
-              saveToCloud();
-              render();
-            }
-          } catch (err) { alert('Fichier JSON invalide.'); }
-        };
-        reader.readAsText(file);
-      } else {
-        reader.onload = function(e) {
-          const data = new Uint8Array(e.target.result);
-          const workbook = XLSX.read(data, { type: 'array' });
-          const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-          const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-
-          if (rows.length > 0) {
-            let headerIndex = -1, colCompany = -1, colName = -1, colActivity = -1, colEmail = -1, colPhone = -1, colNotes = -1;
-
-            for (let r = 0; r < Math.min(rows.length, 5); r++) {
-              const rowStr = rows[r].map(cell => String(cell || '').trim().toLowerCase());
-              const cComp = rowStr.findIndex(h => h.includes('entreprise') || h.includes('company'));
-              if (cComp >= 0) {
-                headerIndex = r; colCompany = cComp;
-                colName = rowStr.findIndex(h => h.includes('nom') || h.includes('contact'));
-                colActivity = rowStr.findIndex(h => h.includes('activité') || h.includes('activite'));
-                colEmail = rowStr.findIndex(h => h.includes('mail'));
-                colPhone = rowStr.findIndex(h => h.includes('phone') || h.includes('tél'));
-                colNotes = rowStr.findIndex(h => h.includes('remarque'));
-                break;
-              }
-            }
-
-            if (headerIndex === -1) { headerIndex = 0; colCompany = 0; colName = 1; colActivity = 2; colEmail = 3; colPhone = 4; colNotes = 5; }
-
-            state.importers = [];
-
-            for (let i = headerIndex + 1; i < rows.length; i++) {
-              const row = rows[i];
-              if (!row) continue;
-              const companyVal = colCompany >= 0 && row[colCompany] ? String(row[colCompany]).trim() : '';
-              if (!companyVal || companyVal.toLowerCase() === 'entreprise') continue;
-
-              state.importers.push({
-                id: 'i_ex_' + Date.now() + '_' + i,
-                company: companyVal,
-                name: colName >= 0 && row[colName] ? String(row[colName]).trim() : '',
-                activity: colActivity >= 0 && row[colActivity] ? String(row[colActivity]).trim() : '',
-                email: colEmail >= 0 && row[colEmail] ? String(row[colEmail]).trim() : '',
-                phone: colPhone >= 0 && row[colPhone] ? String(row[colPhone]).trim() : '',
-                avatar: '',
-                notes: colNotes >= 0 && row[colNotes] ? String(row[colNotes]).trim() : '',
-                x: 0, y: 0
-              });
-            }
-
-            calculateInitialPositions();
+      reader.onload = function(evt) {
+        try {
+          const parsed = JSON.parse(evt.target.result);
+          if (parsed.domains || parsed.importers) {
+            state = parsed;
+            renderWorkspace();
             saveToCloud();
-            render();
-            alert(`${state.importers.length} importateurs chargés et envoyés sur le Cloud !`);
           }
-        };
-        reader.readAsArrayBuffer(file);
+        } catch(err) { alert("Format de fichier non reconnu."); }
+      };
+      reader.readAsText(file);
+    }
+
+    function resetAllData() {
+      if (confirm("Réinitialiser toute la carte ?")) {
+        state = { domains: [], importers: [], links: [] };
+        renderWorkspace();
+        saveToCloud();
       }
     }
+
+    // Auto-déverrouillage au chargement pour simplifier
+    window.onload = unlockApp;
   </script>
 </body>
 </html>
