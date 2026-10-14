@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Bouquet Fine Wine - Carte Malaisie 2026</title>
+  <title>Bouquet Fine Wine - Carte Malaisie</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=SF+Pro+Display:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -44,11 +44,6 @@
     }
     .lock-box h2 { font-family: var(--font-title); color: var(--primary-wine); margin-bottom: 8px; font-size: 22px; }
     .lock-box p { color: var(--text-muted); font-size: 13px; margin-bottom: 24px; }
-    .lock-input {
-      width: 100%; padding: 12px 16px; border-radius: 12px;
-      border: 1px solid var(--card-border); font-size: 14px; margin-bottom: 16px;
-      text-align: center; outline: none; background: #F4F3EF;
-    }
     .lock-btn {
       width: 100%; padding: 12px; background: var(--primary-wine);
       color: white; border: none; border-radius: 12px; font-weight: 600;
@@ -83,11 +78,11 @@
 
     .draggable-card { position: absolute; background: var(--card-bg); backdrop-filter: blur(16px); border: 1px solid var(--card-border); border-radius: 16px; box-shadow: var(--card-shadow); cursor: grab; z-index: 10; transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease; }
 
-    /* Style de sélection en mode relier (bordure grasse dorée) */
+    /* Bordure très grasse et dorée pour l'élément sélectionné en Mode Relier */
     .draggable-card.selected-for-link {
-      border: 3px solid var(--accent-gold) !important;
-      box-shadow: 0 0 18px rgba(197, 160, 89, 0.6) !important;
-      transform: scale(1.05);
+      border: 4px solid var(--accent-gold) !important;
+      box-shadow: 0 0 25px rgba(197, 160, 89, 0.6) !important;
+      transform: scale(1.06);
       z-index: 50 !important;
     }
 
@@ -110,14 +105,14 @@
     .draggable-card:hover .card-actions { display: flex; }
     .btn-icon { width: 22px; height: 22px; border-radius: 50%; background: rgba(0,0,0,0.7); color: white; border: none; font-size: 11px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 
-    /* Modale Restructurée */
-    .modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.3); backdrop-filter: blur(6px); z-index: 200; display: none; align-items: center; justify-content: center; pointer-events: none; }
+    /* Modale Restructurée & Sécurisée */
+    .modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.4); backdrop-filter: blur(4px); z-index: 200; display: none; align-items: center; justify-content: center; }
     .modal-overlay.active { display: flex; }
     
     .modal-card { 
       background: white; width: 85vw; max-width: 900px; border-radius: 24px; 
       position: relative; max-height: 90vh; overflow-y: auto; display: flex; flex-direction: column;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.2); pointer-events: auto;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.25);
     }
 
     .modal-header-banner {
@@ -149,6 +144,7 @@
     .info-row { margin-bottom: 10px; }
     .info-row label { display: block; font-size: 10px; text-transform: uppercase; color: var(--accent-gold); font-weight: 600; margin-bottom: 4px; }
     .modal-field-edit { width: 100%; font-size: 13px; background: #F8F7F4; padding: 8px 12px; border-radius: 10px; border: 1px solid rgba(0,0,0,0.08); font-family: inherit; outline: none; }
+    .modal-field-edit:focus { border-color: var(--accent-gold); background: white; }
 
     .modal-close { position: absolute; top: 16px; right: 20px; background: rgba(0,0,0,0.06); border: none; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; font-size: 14px; z-index: 10; }
 
@@ -161,9 +157,7 @@
   <div id="lock-screen">
     <div class="lock-box">
       <h2>Bouquet Fine Wine</h2>
-      <p>Accès restreint à la Carte Malaisie 2026</p>
-      <input type="password" id="password-input" class="lock-input" placeholder="Mot de passe" onkeydown="if(event.key==='Enter') unlockApp()">
-      <button class="lock-btn" onclick="unlockApp()">Accéder</button>
+      <button class="lock-btn" onclick="unlockApp()">Accéder à la Carte</button>
     </div>
   </div>
 
@@ -185,21 +179,22 @@
       <button class="btn" onclick="autoLayout()">✨ Re-disposer</button>
       <button class="btn" onclick="exportData()">💾 Exporter JSON</button>
       <button class="btn" onclick="triggerJSONImport()">📂 Importer JSON</button>
-      <button class="btn" style="color: #c0392b;" onclick="resetAllData()">🗑️ RàZ</button>
     </div>
   </header>
 
   <div id="workspace">
+    <!-- Zone libre de fond pointillé -->
     <svg id="connections-layer"></svg>
   </div>
 
-  <div id="linking-banner">Mode Relier : Cliquez sur un élément puis sur un autre pour créer ou supprimer la liaison</div>
+  <div id="linking-banner">Mode Relier Actif : Cliquez sur un élément puis sur un autre pour les lier/délier</div>
 
-  <!-- Fiche Modale -->
-  <div class="modal-overlay" id="info-modal" onmouseleave="closeModal()">
-    <div class="modal-card">
-      <button class="modal-close" onclick="closeModal()">✕</button>
+  <!-- Fiche Modale avec sécurité de focus -->
+  <div class="modal-overlay" id="info-modal">
+    <div class="modal-card" onmouseenter="keepModalOpen()" onmouseleave="attemptCloseModal()">
+      <button class="modal-close" onclick="forceCloseModal()">✕</button>
       
+      <!-- En-tête Pleine Largeur -->
       <div class="modal-header-banner">
         <img src="" id="m-avatar" class="modal-banner-avatar" alt="Logo">
         <div class="modal-banner-info">
@@ -208,22 +203,25 @@
         </div>
       </div>
 
+      <!-- Colonnes inversées : Infos à Gauche | Domaines à Droite -->
       <div class="modal-body-layout">
+        
+        <!-- Colonne Gauche : Formulaire Infos -->
         <div>
           <div class="info-row">
             <label>Couleur Pastel du Statut</label>
             <div class="color-picker-group">
-              <div class="color-option" data-color="green" title="Vert Pastel" onclick="selectColor('green')"></div>
-              <div class="color-option" data-color="orange" title="Orange Pastel" onclick="selectColor('orange')"></div>
-              <div class="color-option" data-color="red" title="Rouge Pastel" onclick="selectColor('red')"></div>
-              <div class="color-option" data-color="blue" title="Bleu Pastel" onclick="selectColor('blue')"></div>
+              <div class="color-option" data-color="green" title="Vert" onclick="selectColor('green')"></div>
+              <div class="color-option" data-color="orange" title="Orange" onclick="selectColor('orange')"></div>
+              <div class="color-option" data-color="red" title="Rouge" onclick="selectColor('red')"></div>
+              <div class="color-option" data-color="blue" title="Bleu" onclick="selectColor('blue')"></div>
               <div class="color-option" data-color="none" title="Neutre" onclick="selectColor('none')"></div>
             </div>
             <input type="hidden" id="m-input-color" value="none">
           </div>
 
           <div class="info-row">
-            <label>Lien Photo / Logo (URL Google Drive / ImgBB)</label>
+            <label>Lien Photo / Logo (Direct Drive / ImgBB)</label>
             <input type="text" id="m-input-avatar" class="modal-field-edit" placeholder="https://lh3.googleusercontent.com/d/..." onchange="saveModalChanges()">
           </div>
 
@@ -235,12 +233,14 @@
           <div class="info-row"><label>Remarque / Notes</label><textarea id="m-input-notes" rows="2" class="modal-field-edit" onchange="saveModalChanges()"></textarea></div>
         </div>
 
+        <!-- Colonne Droite : Domaines -->
         <div style="display: flex; flex-direction: column;">
           <div class="info-row" style="flex-grow: 1; display: flex; flex-direction: column;">
             <label style="font-size: 11px; font-weight: 700;">🍷 DOMAINES ASSOCIÉS</label>
-            <textarea id="m-input-domains" class="modal-field-edit" style="flex-grow: 1; min-height: 250px; resize: vertical;" placeholder="Saisir les domaines gérés..." onchange="saveModalChanges()"></textarea>
+            <textarea id="m-input-domains" class="modal-field-edit" style="flex-grow: 1; min-height: 300px; resize: vertical;" placeholder="Saisir les domaines gérés..." onchange="saveModalChanges()"></textarea>
           </div>
         </div>
+
       </div>
     </div>
   </div>
@@ -253,8 +253,9 @@
 
     let state = { domains: [], importers: [], links: [] };
     let activeModalId = null;
-    let linkingSource = null; // { id, type }
+    let linkingSource = null; // Stocke {id, type} du premier élément cliqué
     let isLinkingMode = false;
+    let hoverCloseTimeout = null;
 
     function unlockApp() {
       document.getElementById('lock-screen').style.display = 'none';
@@ -309,12 +310,14 @@
       const ws = document.getElementById('workspace');
       document.querySelectorAll('.draggable-card').forEach(el => el.remove());
 
+      // Rendu Domaines
       state.domains.forEach(d => {
         const el = document.createElement('div');
         el.className = 'draggable-card domain-card';
         el.id = `card-${d.id}`;
         el.style.left = `${d.x}px`;
         el.style.top = `${d.y}px`;
+        
         if (linkingSource && linkingSource.id === d.id) {
           el.classList.add('selected-for-link');
         }
@@ -328,7 +331,7 @@
         `;
 
         el.onclick = (e) => {
-          if (e.target.classList.contains('btn-icon')) return;
+          if (e.target.closest('.btn-icon')) return;
           if (isLinkingMode) handleLinkingClick(d.id, 'domain');
         };
 
@@ -336,6 +339,7 @@
         ws.appendChild(el);
       });
 
+      // Rendu Importateurs
       state.importers.forEach(imp => {
         const el = document.createElement('div');
         el.className = 'draggable-card importer-card';
@@ -343,6 +347,7 @@
         el.style.left = `${imp.x}px`;
         el.style.top = `${imp.y}px`;
         el.setAttribute('data-color', imp.color || 'none');
+        
         if (linkingSource && linkingSource.id === imp.id) {
           el.classList.add('selected-for-link');
         }
@@ -359,13 +364,27 @@
           </div>
         `;
 
-        el.onmouseenter = () => {
-          if (!isLinkingMode) openModal(imp.id);
-        };
+        // Ouverture au survol
+        el.addEventListener('mouseenter', () => {
+          if (!isLinkingMode) {
+            keepModalOpen();
+            openModal(imp.id);
+          }
+        });
 
+        // Fermeture douce quand on quitte la carte
+        el.addEventListener('mouseleave', () => {
+          if (!isLinkingMode) attemptCloseModal();
+        });
+
+        // Clic : Soit Mode Relier, soit sécurité pour forcer l'ouverture si besoin
         el.onclick = (e) => {
-          if (e.target.classList.contains('btn-icon')) return;
+          if (e.target.closest('.btn-icon')) return;
           if (isLinkingMode) handleLinkingClick(imp.id, 'importer');
+          else {
+            keepModalOpen();
+            openModal(imp.id);
+          }
         };
 
         makeDraggable(el, imp);
@@ -378,7 +397,7 @@
     function makeDraggable(el, item) {
       let isDragging = false, startX, startY;
       el.addEventListener('mousedown', e => {
-        if (e.target.classList.contains('btn-icon')) return;
+        if (e.target.closest('.btn-icon') || e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
         isDragging = true;
         startX = e.clientX - item.x;
         startY = e.clientY - item.y;
@@ -428,6 +447,50 @@
       });
     }
 
+    // GESTION DU MODE RELIER
+    function toggleLinkingMode() {
+      isLinkingMode = !isLinkingMode;
+      document.getElementById('btn-toggle-link').classList.toggle('btn-active', isLinkingMode);
+      document.getElementById('linking-banner').style.display = isLinkingMode ? 'block' : 'none';
+      linkingSource = null;
+      renderWorkspace();
+    }
+
+    function handleLinkingClick(id, type) {
+      if (!linkingSource) {
+        // Premier clic
+        linkingSource = { id, type };
+        renderWorkspace(); 
+        return;
+      }
+
+      if (linkingSource.id === id) {
+        // Re-clic sur le même = Désélection
+        linkingSource = null;
+        renderWorkspace();
+        return;
+      }
+
+      if (linkingSource.type !== type) {
+        // Clic sur l'élément opposé = Création ou suppression du lien
+        const importerId = type === 'importer' ? id : linkingSource.id;
+        const domainId = type === 'domain' ? id : linkingSource.id;
+
+        const idx = state.links.findIndex(l => l.importerId === importerId && l.domainId === domainId);
+        if (idx >= 0) state.links.splice(idx, 1); // Dé-lier
+        else state.links.push({ importerId, domainId }); // Lier
+        
+        linkingSource = null;
+        renderWorkspace();
+        saveToCloud();
+      } else {
+        // Clic sur un autre du même type = Change la sélection
+        linkingSource = { id, type };
+        renderWorkspace();
+      }
+    }
+
+    // GESTION DE LA MODALE & DU SURVOL
     function openModal(id) {
       const imp = state.importers.find(i => i.id === id);
       if (!imp) return;
@@ -446,19 +509,36 @@
       document.getElementById('m-input-notes').value = imp.notes || '';
       document.getElementById('m-input-domains').value = imp.domainsText || '';
 
-      selectColor(imp.color || 'none');
+      selectColor(imp.color || 'none', false);
       document.getElementById('info-modal').classList.add('active');
     }
 
-    function selectColor(colorName) {
+    function selectColor(colorName, doSave = true) {
       document.getElementById('m-input-color').value = colorName;
       document.querySelectorAll('.color-option').forEach(el => {
         el.classList.toggle('selected', el.getAttribute('data-color') === colorName);
       });
-      saveModalChanges();
+      if (doSave) saveModalChanges();
     }
 
-    function closeModal() {
+    function isInputFocused() {
+      // Vérifie si l'utilisateur est en train de taper du texte
+      const active = document.activeElement;
+      return active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA') && document.getElementById('info-modal').contains(active);
+    }
+
+    function keepModalOpen() {
+      clearTimeout(hoverCloseTimeout);
+    }
+
+    function attemptCloseModal() {
+      // Attend un court instant (300ms) avant de fermer
+      hoverCloseTimeout = setTimeout(() => {
+        if (!isInputFocused()) forceCloseModal();
+      }, 300);
+    }
+
+    function forceCloseModal() {
       document.getElementById('info-modal').classList.remove('active');
       activeModalId = null;
     }
@@ -477,53 +557,14 @@
         imp.domainsText = document.getElementById('m-input-domains').value;
         imp.color = document.getElementById('m-input-color').value;
 
+        // Met à jour la carte d'arrière-plan sans fermer la modale
         renderWorkspace();
         saveToCloud();
-      }
-    }
-
-    function toggleLinkingMode() {
-      isLinkingMode = !isLinkingMode;
-      document.getElementById('btn-toggle-link').classList.toggle('btn-active', isLinkingMode);
-      document.getElementById('linking-banner').style.display = isLinkingMode ? 'block' : 'none';
-      linkingSource = null;
-      renderWorkspace();
-    }
-
-    function handleLinkingClick(id, type) {
-      // 1. Premier clic : Sélection initiale
-      if (!linkingSource) {
-        linkingSource = { id, type };
-        renderWorkspace();
-        return;
-      }
-
-      // 2. Clic sur le MÊME élément : Annulation/Désélection
-      if (linkingSource.id === id) {
-        linkingSource = null;
-        renderWorkspace();
-        return;
-      }
-
-      // 3. Clic entre deux types différents (Importateur <-> Domaine) : Liaison/Déliaison
-      if (linkingSource.type !== type) {
-        const importerId = type === 'importer' ? id : linkingSource.id;
-        const domainId = type === 'domain' ? id : linkingSource.id;
-
-        const idx = state.links.findIndex(l => l.importerId === importerId && l.domainId === domainId);
-        if (idx >= 0) {
-          state.links.splice(idx, 1);
-        } else {
-          state.links.push({ importerId, domainId });
-        }
         
-        linkingSource = null;
-        renderWorkspace();
-        saveToCloud();
-      } else {
-        // Clic sur un autre élément de même type : Basculer la sélection vers le nouveau
-        linkingSource = { id, type };
-        renderWorkspace();
+        // Rafraîchir l'en-tête de la modale en direct
+        document.getElementById('m-company-title').innerText = imp.company || 'Nouvel Importateur';
+        document.getElementById('m-contact-title').innerText = imp.contact ? `Contact : ${imp.contact}` : 'Aucun contact saisi';
+        document.getElementById('m-avatar').src = imp.avatar || 'https://via.placeholder.com/65?text=Logo';
       }
     }
 
@@ -561,6 +602,7 @@
         state.importers = state.importers.filter(i => i.id !== id);
         state.links = state.links.filter(l => l.importerId !== id);
       }
+      if (linkingSource && linkingSource.id === id) linkingSource = null;
       renderWorkspace();
       saveToCloud();
     }
@@ -605,14 +647,6 @@
         } catch(err) { alert("Format de fichier non reconnu."); }
       };
       reader.readAsText(file);
-    }
-
-    function resetAllData() {
-      if (confirm("Réinitialiser toute la carte ?")) {
-        state = { domains: [], importers: [], links: [] };
-        renderWorkspace();
-        saveToCloud();
-      }
     }
 
     window.onload = unlockApp;
