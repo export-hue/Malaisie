@@ -32,15 +32,6 @@
     * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
     body { background-color: var(--bg-color); font-family: var(--font-body); color: var(--text-dark); width: 100vw; height: 100vh; overflow: hidden; position: relative; }
 
-    #lock-screen {
-      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: var(--bg-color); z-index: 1000; display: flex; align-items: center; justify-content: center; flex-direction: column;
-    }
-    .lock-box {
-      background: white; padding: 40px; border-radius: 24px; box-shadow: 0 20px 50px rgba(0,0,0,0.08); text-align: center; max-width: 360px; width: 90%; border: 1px solid var(--card-border);
-    }
-    .lock-box h2 { font-family: var(--font-title); color: var(--primary-wine); margin-bottom: 24px; font-size: 22px; }
-    .lock-btn { width: 100%; padding: 12px; background: var(--primary-wine); color: white; border: none; border-radius: 12px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
-
     header {
       position: absolute; top: 16px; left: 50%; transform: translateX(-50%); z-index: 100; display: flex; align-items: center; gap: 16px; padding: 10px 22px;
       background: rgba(255, 255, 255, 0.92); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.9); border-radius: 40px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
@@ -148,13 +139,6 @@
 </head>
 <body>
 
-  <div id="lock-screen">
-    <div class="lock-box">
-      <h2>Bouquet Fine Wine</h2>
-      <button class="lock-btn" onclick="unlockApp()">Accéder à la Carte</button>
-    </div>
-  </div>
-
   <header>
     <div class="brand-title">
       <h1>Bouquet Fine Wine</h1>
@@ -190,7 +174,7 @@
         <img src="" id="m-avatar" class="modal-banner-avatar" alt="Logo">
         <div class="modal-banner-info">
           <h2 id="m-company-title">Entreprise</h2>
-          <p id="m-contact-title">Contact</p>
+          <p id="m-contact-title">Activité</p>
         </div>
       </div>
 
@@ -238,18 +222,10 @@
     let linkingSource = null; 
     let isLinkingMode = false;
 
-    // Variables pour détecter précisément si c'est un Clic ou un Déplacement
-    let downX = 0, downY = 0;
-
-    function unlockApp() {
-      document.getElementById('lock-screen').style.display = 'none';
-      initApp();
-    }
-
-    async function initApp() {
+    window.onload = async function initApp() {
       await loadData();
       window.addEventListener('resize', renderConnections);
-    }
+    };
 
     async function loadData() {
       updateSyncStatus('syncing', 'Chargement...');
@@ -261,7 +237,6 @@
           const data = await res.json();
           if (data.record && (data.record.domains || data.record.importers)) {
             state = data.record;
-            // Sécurité : S'assurer que le tableau des liens existe bien
             state.links = state.links || [];
             localStorage.setItem('bouquet_backup', JSON.stringify(state));
             renderWorkspace();
@@ -323,8 +298,7 @@
 
         el.onclick = (e) => {
           if (e.target.closest('.btn-icon')) return;
-          // Vérification stricte du clic (non déplacement)
-          if (Math.abs(e.clientX - downX) + Math.abs(e.clientY - downY) > 5) return;
+          if (el.dataset.justDragged === "true") return; 
           
           if (isLinkingMode) handleLinkingClick(d.id, 'domain');
         };
@@ -345,7 +319,6 @@
 
         const avatarUrl = imp.avatar || 'https://via.placeholder.com/50?text=Logo';
         
-        // Création du texte d'aperçu de la bulle (Limité à 60 caractères pour rester propre)
         const notesPreview = imp.notes ? (imp.notes.length > 60 ? imp.notes.substring(0,60)+'...' : imp.notes) : '-';
         const domainsPreview = imp.domainsText ? (imp.domainsText.length > 60 ? imp.domainsText.substring(0,60)+'...' : imp.domainsText) : '-';
 
@@ -367,8 +340,7 @@
 
         el.onclick = (e) => {
           if (e.target.closest('.btn-icon')) return;
-          // Vérification stricte du clic : si la souris a bougé de + de 5 pixels, c'était un glissement
-          if (Math.abs(e.clientX - downX) + Math.abs(e.clientY - downY) > 5) return;
+          if (el.dataset.justDragged === "true") return; // Si la carte vient d'être glissée, on annule le clic
 
           if (isLinkingMode) handleLinkingClick(imp.id, 'importer');
           else openModal(imp.id);
@@ -381,15 +353,15 @@
       renderConnections();
     }
 
+    // Nouveau système de détection Glisser vs Clic (Infaillible)
     function makeDraggable(el, item) {
       let isDragging = false, startX, startY;
+      el.dataset.justDragged = "false";
+
       el.addEventListener('mousedown', e => {
         if (e.target.closest('.btn-icon')) return;
         isDragging = true;
-        
-        // Enregistre la position exacte du début du clic
-        downX = e.clientX; 
-        downY = e.clientY;
+        el.dataset.justDragged = "false";
         
         startX = e.clientX - item.x; 
         startY = e.clientY - item.y;
@@ -398,6 +370,7 @@
 
       window.addEventListener('mousemove', e => {
         if (!isDragging) return;
+        el.dataset.justDragged = "true"; // Dès que ça bouge, ce n'est plus un clic
         item.x = e.clientX - startX; 
         item.y = e.clientY - startY;
         el.style.left = `${item.x}px`; 
@@ -409,10 +382,11 @@
         if (isDragging) {
           isDragging = false;
           el.style.zIndex = 10;
-          // Ne sauvegarde le nuage que si l'élément a été déplacé
-          if (Math.abs(e.clientX - downX) + Math.abs(e.clientY - downY) > 5) {
+          if (el.dataset.justDragged === "true") {
             saveToCloud();
           }
+          // Réinitialise l'état de glissement après un court délai pour laisser passer l'événement onclick
+          setTimeout(() => { el.dataset.justDragged = "false"; }, 50);
         }
       });
     }
@@ -439,7 +413,6 @@
       });
     }
 
-    // MODE RELIER CORRIGÉ 100% SÉCURISÉ
     function toggleLinkingMode() {
       isLinkingMode = !isLinkingMode;
       document.getElementById('btn-toggle-link').classList.toggle('btn-active', isLinkingMode);
@@ -502,4 +475,92 @@
     }
 
     function selectColor(colorName, doSave = true) {
-      document.
+      document.getElementById('m-input-color').value = colorName;
+      document.querySelectorAll('.color-option').forEach(el => {
+        el.classList.toggle('selected', el.getAttribute('data-color') === colorName);
+      });
+      if (doSave) saveModalChanges();
+    }
+
+    function closeModal() {
+      document.getElementById('info-modal').classList.remove('active');
+      activeModalId = null;
+    }
+
+    function saveModalChanges() {
+      if (!activeModalId) return;
+      const imp = state.importers.find(i => i.id === activeModalId);
+      if (imp) {
+        imp.company = document.getElementById('m-input-company').value;
+        imp.contact = document.getElementById('m-input-contact').value;
+        imp.activity = document.getElementById('m-input-activity').value;
+        imp.email = document.getElementById('m-input-email').value;
+        imp.phone = document.getElementById('m-input-phone').value;
+        imp.avatar = document.getElementById('m-input-avatar').value;
+        imp.notes = document.getElementById('m-input-notes').value;
+        imp.domainsText = document.getElementById('m-input-domains').value;
+        imp.color = document.getElementById('m-input-color').value;
+
+        renderWorkspace();
+        saveToCloud();
+        
+        document.getElementById('m-company-title').innerText = imp.company || 'Nouvel Importateur';
+        document.getElementById('m-contact-title').innerText = imp.activity || 'Aucune activité';
+        document.getElementById('m-avatar').src = imp.avatar || 'https://via.placeholder.com/65?text=Logo';
+      }
+    }
+
+    function autoLayout() {
+      const w = window.innerWidth; const h = window.innerHeight;
+      state.domains.forEach((d, idx) => { d.x = w - 200 - (Math.floor(idx / 8) * 160); d.y = 100 + ((idx % 8) * 65); });
+      state.importers.forEach((imp, idx) => {
+        if (idx < 6) { imp.x = 80 + (idx * 230); imp.y = 90; } 
+        else if (idx < 12) { imp.x = 80; imp.y = 160 + ((idx - 6) * 75); } 
+        else { imp.x = 80 + ((idx - 12) * 230); imp.y = h - 120; }
+      });
+      renderWorkspace(); saveToCloud();
+    }
+
+    function deleteItem(type, id, event) {
+      event.stopPropagation();
+      if (type === 'domain') {
+        state.domains = state.domains.filter(d => d.id !== id); state.links = state.links.filter(l => l.domainId !== id);
+      } else {
+        state.importers = state.importers.filter(i => i.id !== id); state.links = state.links.filter(l => l.importerId !== id);
+      }
+      if (linkingSource && linkingSource.id === id) linkingSource = null;
+      renderWorkspace(); saveToCloud();
+    }
+
+    function openAddModal(type) {
+      const name = prompt(`Nom du nouveau ${type === 'domain' ? 'Domaine' : 'Importateur'} :`);
+      if (!name) return;
+      const id = 'id-' + Date.now();
+      if (type === 'domain') state.domains.push({ id, name, region: 'Bourgogne', x: 200, y: 200 });
+      else state.importers.push({ id, company: name, contact: '', avatar: '', color: 'none', x: 150, y: 150 });
+      renderWorkspace(); saveToCloud();
+    }
+
+    function exportData() {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state, null, 2));
+      const a = document.createElement('a'); a.href = dataStr; a.download = "malaisie_2026_backup.json"; a.click();
+    }
+
+    function triggerJSONImport() { document.getElementById('file-input').click(); }
+
+    function handleFileSelect(e) {
+      const file = e.target.files[0]; if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        try {
+          const parsed = JSON.parse(evt.target.result);
+          if (parsed.domains || parsed.importers) {
+            state = parsed; renderWorkspace(); saveToCloud();
+          }
+        } catch(err) { alert("Format de fichier non reconnu."); }
+      };
+      reader.readAsText(file);
+    }
+  </script>
+</body>
+</html>
