@@ -32,6 +32,19 @@
     * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
     body { background-color: var(--bg-color); font-family: var(--font-body); color: var(--text-dark); width: 100vw; height: 100vh; overflow: hidden; position: relative; }
 
+    /* Écran de connexion (Mot de passe) */
+    #lock-screen {
+      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: var(--bg-color); z-index: 1000; display: flex; align-items: center; justify-content: center; flex-direction: column;
+    }
+    .lock-box {
+      background: white; padding: 40px; border-radius: 24px; box-shadow: 0 20px 50px rgba(0,0,0,0.08); text-align: center; max-width: 360px; width: 90%; border: 1px solid var(--card-border);
+    }
+    .lock-box h2 { font-family: var(--font-title); color: var(--primary-wine); margin-bottom: 8px; font-size: 22px; }
+    .lock-box p { color: var(--text-muted); font-size: 13px; margin-bottom: 24px; }
+    .lock-input { width: 100%; padding: 12px 16px; border-radius: 12px; border: 1px solid var(--card-border); font-size: 14px; margin-bottom: 16px; text-align: center; outline: none; background: #F4F3EF; }
+    .lock-btn { width: 100%; padding: 12px; background: var(--primary-wine); color: white; border: none; border-radius: 12px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+    #lock-error { color: #c0392b; font-size: 13px; margin-top: 12px; display: none; font-weight: 500; }
+
     header {
       position: absolute; top: 16px; left: 50%; transform: translateX(-50%); z-index: 100; display: flex; align-items: center; gap: 16px; padding: 10px 22px;
       background: rgba(255, 255, 255, 0.92); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.9); border-radius: 40px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
@@ -53,17 +66,23 @@
 
     #workspace { width: 100vw; height: 100vh; position: relative; overflow: hidden; }
     svg#connections-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 5; }
-    path.connection-line { fill: none; stroke: var(--accent-gold); stroke-width: 2px; stroke-dasharray: 6 4; opacity: 0.45; }
+    path.connection-line { fill: none; stroke: var(--accent-gold); stroke-width: 2px; stroke-dasharray: 6 4; opacity: 0.45; transition: all 0.2s ease; }
 
     .draggable-card { position: absolute; background: var(--card-bg); backdrop-filter: blur(16px); border: 1px solid var(--card-border); border-radius: 16px; box-shadow: var(--card-shadow); cursor: grab; z-index: 10; transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease; }
     .draggable-card:hover { z-index: 45; transform: scale(1.03); box-shadow: 0 15px 35px rgba(0,0,0,0.1); }
 
-    /* Surbrillance dorée Mode Relier */
+    /* Surbrillance Mode Relier */
     .draggable-card.selected-for-link { border: 3px solid var(--accent-gold) !important; box-shadow: 0 0 20px rgba(197, 160, 89, 0.5) !important; transform: scale(1.05); z-index: 50 !important; }
+
+    /* EFFET HOVER : Surbrillance des liaisons actives */
+    path.connection-line.line-highlighted { stroke: var(--primary-wine) !important; stroke-width: 3.5px !important; stroke-dasharray: none !important; opacity: 1 !important; }
+    .draggable-card.linked-highlighted { border: 2px solid var(--primary-wine) !important; box-shadow: 0 0 20px rgba(88, 17, 26, 0.2) !important; transform: scale(1.05); z-index: 40 !important; }
+    .draggable-card.linked-highlighted .domain-name { font-weight: 800 !important; }
+    .draggable-card.linked-highlighted .importer-company { font-weight: 800 !important; }
 
     .domain-card { padding: 8px 12px; min-width: 135px; max-width: 165px; text-align: center; border-top: 3px solid var(--primary-wine); border-radius: 14px; }
     .domain-region { font-size: 8px; font-weight: 600; text-transform: uppercase; color: var(--accent-gold); margin-bottom: 2px; }
-    .domain-name { font-family: var(--font-title); font-size: 13px; font-weight: 600; color: var(--primary-wine); }
+    .domain-name { font-family: var(--font-title); font-size: 13px; font-weight: 600; color: var(--primary-wine); transition: font-weight 0.2s ease; }
 
     .importer-card { padding: 10px 14px; width: 220px; display: flex; align-items: center; gap: 12px; border-radius: 16px; border-left: 5px solid transparent; }
     .importer-card[data-color="green"] { background: var(--pastel-green); border-left-color: #2e7d32; }
@@ -75,24 +94,11 @@
     .importer-avatar { width: 45px; height: 45px; border-radius: 10px; object-fit: cover; background: #E8E5DF; flex-shrink: 0; }
     
     .importer-info-container { flex-grow: 1; overflow: hidden; }
-    
-    /* Nom de l'entreprise sur 2 lignes max */
-    .importer-company { 
-      font-weight: 600; font-size: 13px; line-height: 1.2;
-      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
-      white-space: normal; overflow: hidden; text-overflow: ellipsis; 
-    }
-    
-    /* Activité seule (en une seule ligne) */
+    .importer-company { font-weight: 600; font-size: 13px; line-height: 1.2; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; white-space: normal; overflow: hidden; text-overflow: ellipsis; transition: font-weight 0.2s ease; }
     .importer-subtitle { font-size: 11px; color: var(--text-muted); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-    /* Bulle d'Aperçu (Notes et Domaines) avec alignement texte à gauche */
     .mini-tooltip {
-      position: absolute; top: calc(100% + 8px); left: 50%; transform: translateX(-50%);
-      background: rgba(255,255,255,0.98); border: 1px solid var(--card-border); border-radius: 12px;
-      padding: 12px 14px; box-shadow: 0 10px 30px rgba(0,0,0,0.12); width: 240px;
-      opacity: 0; visibility: hidden; pointer-events: none; transition: opacity 0.2s ease 0.4s; z-index: 100;
-      text-align: left;
+      position: absolute; top: calc(100% + 8px); left: 50%; transform: translateX(-50%); background: rgba(255,255,255,0.98); border: 1px solid var(--card-border); border-radius: 12px; padding: 12px 14px; box-shadow: 0 10px 30px rgba(0,0,0,0.12); width: 240px; opacity: 0; visibility: hidden; pointer-events: none; transition: opacity 0.2s ease 0.4s; z-index: 100; text-align: left;
     }
     .importer-card:hover .mini-tooltip { opacity: 1; visibility: visible; }
     .tooltip-title { font-size: 9px; color: var(--accent-gold); font-weight: 700; margin-bottom: 3px; text-transform: uppercase; letter-spacing: 0.5px; }
@@ -107,15 +113,12 @@
     .modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.4); backdrop-filter: blur(4px); z-index: 200; display: none; align-items: center; justify-content: center; }
     .modal-overlay.active { display: flex; }
     .modal-card { background: white; width: 85vw; max-width: 900px; border-radius: 24px; position: relative; max-height: 90vh; overflow-y: auto; display: flex; flex-direction: column; box-shadow: 0 20px 60px rgba(0,0,0,0.25); }
-
     .modal-header-banner { width: 100%; padding: 20px 28px; background: #F8F7F4; border-bottom: 1px solid var(--card-border); display: flex; align-items: center; gap: 20px; border-top-left-radius: 24px; border-top-right-radius: 24px; }
     .modal-banner-avatar { width: 65px; height: 65px; border-radius: 14px; object-fit: cover; border: 2px solid var(--accent-gold); flex-shrink: 0; background: white; }
     .modal-banner-info { flex-grow: 1; }
     .modal-banner-info h2 { font-family: var(--font-title); color: var(--primary-wine); font-size: 22px; font-weight: 700; }
     .modal-banner-info p { color: var(--text-muted); font-size: 13px; margin-top: 2px; }
-
     .modal-body-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding: 20px 28px; }
-
     .color-picker-group { display: flex; gap: 10px; margin-top: 6px; }
     .color-option { width: 28px; height: 28px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: transform 0.15s; }
     .color-option:hover { transform: scale(1.15); }
@@ -125,19 +128,26 @@
     .color-option[data-color="red"] { background: var(--pastel-red); }
     .color-option[data-color="blue"] { background: var(--pastel-blue); }
     .color-option[data-color="none"] { background: #E0E0E0; }
-
     .info-row { margin-bottom: 10px; }
     .info-row label { display: block; font-size: 10px; text-transform: uppercase; color: var(--accent-gold); font-weight: 600; margin-bottom: 4px; }
     .modal-field-edit { width: 100%; font-size: 13px; background: #F8F7F4; padding: 8px 12px; border-radius: 10px; border: 1px solid rgba(0,0,0,0.08); font-family: inherit; outline: none; }
     .modal-field-edit:focus { border-color: var(--accent-gold); background: white; }
-
     .modal-close { position: absolute; top: 16px; right: 20px; background: rgba(0,0,0,0.06); border: none; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; font-size: 14px; z-index: 10; }
-
     #linking-banner { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--accent-gold); color: white; padding: 10px 24px; border-radius: 20px; font-size: 13px; z-index: 90; display: none; }
     #file-input { display: none; }
   </style>
 </head>
 <body>
+
+  <div id="lock-screen">
+    <div class="lock-box">
+      <h2>Bouquet Fine Wine</h2>
+      <p>Accès restreint à la Carte Malaisie 2026</p>
+      <input type="password" id="password-input" class="lock-input" placeholder="Mot de passe" onkeydown="if(event.key==='Enter') unlockApp()">
+      <button class="lock-btn" onclick="unlockApp()">Accéder à la Carte</button>
+      <div id="lock-error">Mot de passe incorrect</div>
+    </div>
+  </div>
 
   <header>
     <div class="brand-title">
@@ -221,11 +231,29 @@
     let activeModalId = null;
     let linkingSource = null; 
     let isLinkingMode = false;
+    let downX = 0, downY = 0;
+    let isDraggingGlobal = false;
 
-    window.onload = async function initApp() {
+    // Fonction de déverrouillage
+    function unlockApp() {
+      const pwd = document.getElementById('password-input').value;
+      if (pwd === "Bouquet2026") {
+        document.getElementById('lock-screen').style.display = 'none';
+        initApp();
+      } else {
+        document.getElementById('lock-error').style.display = 'block';
+      }
+    }
+
+    // Curseur dans la case du mot de passe au chargement
+    window.onload = () => {
+      document.getElementById('password-input').focus();
+    };
+
+    async function initApp() {
       await loadData();
       window.addEventListener('resize', renderConnections);
-    };
+    }
 
     async function loadData() {
       updateSyncStatus('syncing', 'Chargement...');
@@ -303,6 +331,28 @@
           if (isLinkingMode) handleLinkingClick(d.id, 'domain');
         };
 
+        // Effet Hover : Lignes et Importateurs connectés en gras
+        el.addEventListener('mouseenter', () => {
+          if (isDraggingGlobal) return;
+          state.links.forEach(l => {
+            if(l.domainId === d.id) {
+              const iCard = document.getElementById(`card-${l.importerId}`);
+              if(iCard) iCard.classList.add('linked-highlighted');
+            }
+          });
+          document.querySelectorAll(`.connection-line[data-domain="${d.id}"]`).forEach(p => p.classList.add('line-highlighted'));
+        });
+
+        el.addEventListener('mouseleave', () => {
+          state.links.forEach(l => {
+            if(l.domainId === d.id) {
+              const iCard = document.getElementById(`card-${l.importerId}`);
+              if(iCard) iCard.classList.remove('linked-highlighted');
+            }
+          });
+          document.querySelectorAll(`.connection-line[data-domain="${d.id}"]`).forEach(p => p.classList.remove('line-highlighted'));
+        });
+
         makeDraggable(el, d);
         ws.appendChild(el);
       });
@@ -318,7 +368,6 @@
         if (linkingSource && linkingSource.id === imp.id) el.classList.add('selected-for-link');
 
         const avatarUrl = imp.avatar || 'https://via.placeholder.com/50?text=Logo';
-        
         const notesPreview = imp.notes ? (imp.notes.length > 60 ? imp.notes.substring(0,60)+'...' : imp.notes) : '-';
         const domainsPreview = imp.domainsText ? (imp.domainsText.length > 60 ? imp.domainsText.substring(0,60)+'...' : imp.domainsText) : '-';
 
@@ -340,11 +389,33 @@
 
         el.onclick = (e) => {
           if (e.target.closest('.btn-icon')) return;
-          if (el.dataset.justDragged === "true") return; // Si la carte vient d'être glissée, on annule le clic
+          if (el.dataset.justDragged === "true") return; 
 
           if (isLinkingMode) handleLinkingClick(imp.id, 'importer');
           else openModal(imp.id);
         };
+
+        // Effet Hover : Lignes et Domaines connectés en gras
+        el.addEventListener('mouseenter', () => {
+          if (isDraggingGlobal) return;
+          state.links.forEach(l => {
+            if(l.importerId === imp.id) {
+              const dCard = document.getElementById(`card-${l.domainId}`);
+              if(dCard) dCard.classList.add('linked-highlighted');
+            }
+          });
+          document.querySelectorAll(`.connection-line[data-importer="${imp.id}"]`).forEach(p => p.classList.add('line-highlighted'));
+        });
+
+        el.addEventListener('mouseleave', () => {
+          state.links.forEach(l => {
+            if(l.importerId === imp.id) {
+              const dCard = document.getElementById(`card-${l.domainId}`);
+              if(dCard) dCard.classList.remove('linked-highlighted');
+            }
+          });
+          document.querySelectorAll(`.connection-line[data-importer="${imp.id}"]`).forEach(p => p.classList.remove('line-highlighted'));
+        });
 
         makeDraggable(el, imp);
         ws.appendChild(el);
@@ -353,7 +424,6 @@
       renderConnections();
     }
 
-    // Nouveau système de détection Glisser vs Clic (Infaillible)
     function makeDraggable(el, item) {
       let isDragging = false, startX, startY;
       el.dataset.justDragged = "false";
@@ -363,18 +433,17 @@
         isDragging = true;
         el.dataset.justDragged = "false";
         
-        startX = e.clientX - item.x; 
-        startY = e.clientY - item.y;
+        downX = e.clientX; downY = e.clientY;
+        startX = e.clientX - item.x; startY = e.clientY - item.y;
         el.style.zIndex = 100;
       });
 
       window.addEventListener('mousemove', e => {
         if (!isDragging) return;
-        el.dataset.justDragged = "true"; // Dès que ça bouge, ce n'est plus un clic
-        item.x = e.clientX - startX; 
-        item.y = e.clientY - startY;
-        el.style.left = `${item.x}px`; 
-        el.style.top = `${item.y}px`;
+        el.dataset.justDragged = "true";
+        isDraggingGlobal = true;
+        item.x = e.clientX - startX; item.y = e.clientY - startY;
+        el.style.left = `${item.x}px`; el.style.top = `${item.y}px`;
         renderConnections();
       });
 
@@ -385,8 +454,10 @@
           if (el.dataset.justDragged === "true") {
             saveToCloud();
           }
-          // Réinitialise l'état de glissement après un court délai pour laisser passer l'événement onclick
-          setTimeout(() => { el.dataset.justDragged = "false"; }, 50);
+          setTimeout(() => { 
+            el.dataset.justDragged = "false"; 
+            isDraggingGlobal = false;
+          }, 50);
         }
       });
     }
@@ -409,6 +480,10 @@
         const dx = (x2 - x1) / 2;
         path.setAttribute('d', `M ${x1} ${y1} C ${x1 + dx} ${y1}, ${x2 - dx} ${y2}, ${x2} ${y2}`);
         path.setAttribute('class', 'connection-line');
+        // Identification pour le survol
+        path.setAttribute('data-importer', link.importerId);
+        path.setAttribute('data-domain', link.domainId);
+        
         svg.appendChild(path);
       });
     }
@@ -422,34 +497,21 @@
     }
 
     function handleLinkingClick(id, type) {
-      if (!linkingSource) {
-        linkingSource = { id, type };
-        renderWorkspace(); 
-        return;
-      }
-      
-      if (linkingSource.id === id) {
-        linkingSource = null;
-        renderWorkspace();
-        return;
-      }
+      if (!linkingSource) { linkingSource = { id, type }; renderWorkspace(); return; }
+      if (linkingSource.id === id) { linkingSource = null; renderWorkspace(); return; }
       
       if (linkingSource.type !== type) {
         const importerId = type === 'importer' ? id : linkingSource.id;
         const domainId = type === 'domain' ? id : linkingSource.id;
-
         state.links = state.links || [];
         const idx = state.links.findIndex(l => l.importerId === importerId && l.domainId === domainId);
         
-        if (idx >= 0) state.links.splice(idx, 1); 
-        else state.links.push({ importerId, domainId });
+        if (idx >= 0) state.links.splice(idx, 1); else state.links.push({ importerId, domainId });
         
         linkingSource = null;
-        renderWorkspace();
-        saveToCloud();
+        renderWorkspace(); saveToCloud();
       } else {
-        linkingSource = { id, type };
-        renderWorkspace();
+        linkingSource = { id, type }; renderWorkspace();
       }
     }
 
@@ -476,16 +538,11 @@
 
     function selectColor(colorName, doSave = true) {
       document.getElementById('m-input-color').value = colorName;
-      document.querySelectorAll('.color-option').forEach(el => {
-        el.classList.toggle('selected', el.getAttribute('data-color') === colorName);
-      });
+      document.querySelectorAll('.color-option').forEach(el => el.classList.toggle('selected', el.getAttribute('data-color') === colorName));
       if (doSave) saveModalChanges();
     }
 
-    function closeModal() {
-      document.getElementById('info-modal').classList.remove('active');
-      activeModalId = null;
-    }
+    function closeModal() { document.getElementById('info-modal').classList.remove('active'); activeModalId = null; }
 
     function saveModalChanges() {
       if (!activeModalId) return;
@@ -501,9 +558,7 @@
         imp.domainsText = document.getElementById('m-input-domains').value;
         imp.color = document.getElementById('m-input-color').value;
 
-        renderWorkspace();
-        saveToCloud();
-        
+        renderWorkspace(); saveToCloud();
         document.getElementById('m-company-title').innerText = imp.company || 'Nouvel Importateur';
         document.getElementById('m-contact-title').innerText = imp.activity || 'Aucune activité';
         document.getElementById('m-avatar').src = imp.avatar || 'https://via.placeholder.com/65?text=Logo';
@@ -523,11 +578,8 @@
 
     function deleteItem(type, id, event) {
       event.stopPropagation();
-      if (type === 'domain') {
-        state.domains = state.domains.filter(d => d.id !== id); state.links = state.links.filter(l => l.domainId !== id);
-      } else {
-        state.importers = state.importers.filter(i => i.id !== id); state.links = state.links.filter(l => l.importerId !== id);
-      }
+      if (type === 'domain') { state.domains = state.domains.filter(d => d.id !== id); state.links = state.links.filter(l => l.domainId !== id); } 
+      else { state.importers = state.importers.filter(i => i.id !== id); state.links = state.links.filter(l => l.importerId !== id); }
       if (linkingSource && linkingSource.id === id) linkingSource = null;
       renderWorkspace(); saveToCloud();
     }
@@ -554,9 +606,7 @@
       reader.onload = function(evt) {
         try {
           const parsed = JSON.parse(evt.target.result);
-          if (parsed.domains || parsed.importers) {
-            state = parsed; renderWorkspace(); saveToCloud();
-          }
+          if (parsed.domains || parsed.importers) { state = parsed; renderWorkspace(); saveToCloud(); }
         } catch(err) { alert("Format de fichier non reconnu."); }
       };
       reader.readAsText(file);
