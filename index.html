@@ -220,8 +220,8 @@
   <input type="file" id="file-input" onchange="handleFileSelect(event)">
 
   <script>
-    const JSONBIN_BIN_ID = "6ace1c3eac6210605a230f14";
-    const JSONBIN_API_KEY = "$2a$10$w85I3zYfW8X2qG3L7s/g2.1wVj5sZ8J";
+    const JSONBIN_BIN_ID = "6ace1c3eac6210605a2d7072";
+    const JSONBIN_API_KEY = "$2a$10$5PPv7.efMR/bixp3G0XV4uTh1oi80l3doJq08GDMSeAP/2d/nwT4i";
 
     let state = { domains: [], importers: [], links: [] };
     let activeModalId = null;
@@ -252,7 +252,7 @@
       try {
         const res = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`, {
           headers: { 'X-Master-Key': JSONBIN_API_KEY },
-          cache: 'no-store' // FORCE LE RAFRAÎCHISSEMENT DU CACHE (Vital pour ton patron)
+          cache: 'no-store'
         });
         if (res.ok) {
           const data = await res.json();
@@ -288,7 +288,6 @@
           body: JSON.stringify(state)
         });
         
-        // VRAIE VERIFICATION (Si JSONBin bloque, on affiche l'erreur rouge)
         if (!res.ok) throw new Error("JSONBin a bloqué l'envoi");
         
         updateSyncStatus('online', 'En direct (Cloud)');
